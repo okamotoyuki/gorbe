@@ -33,7 +33,6 @@ module Gorbe
       ast = Ripper.sexp(code)
       Gorbe.debug ast
       generate_go_code ast
-      'test'
     end
 
     # Compile Ruby code in a file to Go code

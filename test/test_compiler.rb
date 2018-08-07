@@ -28,8 +28,33 @@ class CoreTest < Minitest::Test
       test_id + '_' + test_name + '.rb'
   end
 
-  def test_core_0_toplevel_1_toplevel
+  def test_core_0_toplevel_1_identifier
     test_path = get_test_path_from_method(__method__.to_s)
-    assert_equal 'test', @gorbe.compile_file(test_path)
+    @gorbe.compile_file(test_path)
+    # TODO : Add assert function here
+  end
+
+  def test_core_0_toplevel_2_comment
+    test_path = get_test_path_from_method(__method__.to_s)
+    @gorbe.compile_file(test_path)
+    # TODO : Add assert function here
+  end
+
+  def test_core_0_toplevel_3_heredoc
+    test_path = get_test_path_from_method(__method__.to_s)
+    @gorbe.compile_file(test_path)
+    # TODO : Add assert function here
+  end
+
+  def test_core_0_toplevel_4_reserved_word
+    test_path = get_test_path_from_method(__method__.to_s)
+    @gorbe.compile_file(test_path)
+    # TODO : Add assert function here
+  end
+
+  def test_core_0_toplevel_5_expression
+    test_path = get_test_path_from_method(__method__.to_s)
+    @gorbe.compile_file(test_path)
+    # TODO : Add assert function here
   end
 end
