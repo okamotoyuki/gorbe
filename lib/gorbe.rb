@@ -48,9 +48,9 @@ module Gorbe
       toplevel = Compiler::TopLevel.new
       visitor = Compiler::StatementVisitor.new(toplevel)
 
-      @writer.generate_header(nil, nil) # TODO : Give package and script info
+      @writer.generate_header('hello', '"hello"') # TODO : Give package and script info
       visitor.visit(ast)
-      @writer.generate_footer
+      @writer.generate_footer('"hello"')
     end
   end
 

@@ -1,10 +1,12 @@
 module Gorbe
   module Compiler
 
+    # A class for writing Go code
     class Writer
       def initialize
       end
 
+      # Generate header of Go code TODO : Consider scope of top level and module
       def generate_header(package, script)
         code = <<~EOS
           package #{package}
@@ -18,11 +20,12 @@ module Gorbe
         puts code
       end
 
-      def generate_footer
+      # Generate footer of Go code
+      def generate_footer(modname)
         code = <<~EOS
           \t\treturn nil, πE
           \t})
-          \tπg.RegisterModule($modname, Code)
+          \tπg.RegisterModule(#{modname}, Code)
           }
         EOS
         puts code

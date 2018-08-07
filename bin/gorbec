@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+$:.unshift('../lib')
+require 'gorbe'
+
+def main
+  gorbe = Gorbe::Core.new
+  gorbe.compile_file(ARGV[0])
+end
+
+main
