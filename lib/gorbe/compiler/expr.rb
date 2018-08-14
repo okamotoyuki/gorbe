@@ -3,12 +3,12 @@ module Gorbe
 
     class ExprVisitor < Visitor
       def initialize(stmt_visitor)
-        super(parent=stmt_visitor)
-        @depth = stmt_visitor.depth
-        @nodetype_map = {
-          binary: 'binop',
-          '@int': 'int'
-        }
+        super(parent: stmt_visitor, nodetype_map:
+            {
+                binary: 'binop',
+                '@int': 'int'
+            }
+        )
       end
 
       def visit_binop(node)

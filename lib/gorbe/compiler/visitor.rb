@@ -4,15 +4,26 @@ module Gorbe
     # A visitor class for traversing Ruby AST
     class Visitor
       attr_reader :depth
+      attr_reader :parent
 
-      def initialize(block=nil, parent=nil)
+      def initialize(block: nil, parent: nil, nodetype_map: {})
+        @block = block
+        @parent = parent
+        @nodetype_map = nodetype_map
         @depth = 0
-        @nodetype_map = {}
       end
 
       # Print visitor activity
       def print_activity(method_name)
-        Gorbe.debug('  ' * (@depth - 1) + '(' + method_name + ')')
+
+        # Calculate depth
+        depth = @depth
+        visitor = self
+        unless visitor.parent.nil? then
+          depth += visitor.parent.depth
+          visitor = visitor.parent
+        end
+        Gorbe.debug('  ' * (depth - 1) + '(' + method_name + ')')
       end
 
       # Traverse Ruby AST

@@ -6,11 +6,13 @@ module Gorbe
     class StatementVisitor < Visitor
 
       def initialize(block)
-        super(block=block)
-        @nodetype_map = {
-          program: 'program',
-          binary: 'expr'
-        }
+        super(block: block, nodetype_map:
+            {
+                program: 'program',
+                binary: 'expr'
+            }
+        )
+        @expr_visitor = Compiler::ExprVisitor.new(self)
       end
 
       def visit_program(node)
@@ -24,10 +26,9 @@ module Gorbe
 
       def visit_expr(node)
         print_activity(__method__.to_s)
-        expr_visitor = Compiler::ExprVisitor.new(self)
-        expr_visitor.visit(node)
+        @expr_visitor.visit(node)
       end
-    end
 
+    end
   end
 end
