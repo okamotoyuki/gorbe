@@ -14,7 +14,7 @@ module Gorbe
       end
 
       # Print visitor activity
-      def print_activity(method_name)
+      def log_activity(method_name)
 
         # Calculate depth
         depth = @depth

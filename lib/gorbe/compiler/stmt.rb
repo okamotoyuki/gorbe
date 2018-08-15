@@ -16,7 +16,7 @@ module Gorbe
       end
 
       def visit_program(node)
-        print_activity(__method__.to_s)
+        log_activity(__method__.to_s)
         children = node.slice(1..-1)
 
         children.each do |child|
@@ -25,7 +25,7 @@ module Gorbe
       end
 
       def visit_expr(node)
-        print_activity(__method__.to_s)
+        log_activity(__method__.to_s)
         @expr_visitor.visit(node)
       end
 

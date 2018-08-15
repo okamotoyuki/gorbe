@@ -12,7 +12,7 @@ module Gorbe
       end
 
       def visit_binop(node)
-        print_activity(__method__.to_s)
+        log_activity(__method__.to_s)
 
         raise if node.length != 4 # TODO : Raise an appropriate exception
 
@@ -22,7 +22,7 @@ module Gorbe
       end
 
       def visit_int(node)
-        print_activity(__method__.to_s)
+        log_activity(__method__.to_s)
       end
     end
 
