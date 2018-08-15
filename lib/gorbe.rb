@@ -6,32 +6,33 @@ require 'gorbe/compiler/stmt'
 
 require 'ripper'
 require 'pp'
+require 'logger'
 
 # A module for transpiling Ruby code to Go code
 module Gorbe
 
-  # Debug Gorbe module
-  def debug(msg)
-    if msg.is_a?(String)
-      STDERR.puts '(debug) ' + msg
-    else
-      STDERR.puts '(debug) '
-      PP.pp(msg, STDERR)
-    end
+  # Logger for Gorbe module
+  class << self
+    attr_accessor :logger
   end
-
-  module_function :debug
 
   # A core class of Gorbe
   class Core
-    def initialize
+    LOG_LEVEL = {
+        :debug => Logger::DEBUG,
+        :info => Logger::INFO
+    }
+
+    def initialize(log_level=:info)
       @writer = Gorbe::Compiler::Writer.new
+      Gorbe::logger = Logger.new(STDERR)
+      Gorbe::logger.level = LOG_LEVEL[:info]
     end
 
     # Compile Ruby code to Go code
     def compile(code)
       ast = Ripper.sexp(code)
-      Gorbe.debug ast
+      Gorbe.logger.debug(ast)
       generate_go_code ast
     end
 

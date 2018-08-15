@@ -23,7 +23,7 @@ module Gorbe
           depth += visitor.parent.depth
           visitor = visitor.parent
         end
-        Gorbe.debug('  ' * (depth - 1) + '(' + method_name + ')')
+        Gorbe.logger.debug('  ' * (depth - 1) + '(' + method_name + ')')
       end
 
       # Traverse Ruby AST
@@ -31,7 +31,7 @@ module Gorbe
         @depth += 1
 
         if ast.empty?
-          Gorbe.debug('Node shouldn\'t be empty.')
+          Gorbe.logger.fatal('Node shouldn\'t be empty.')
           @depth -= 1
           raise # TODO : Raise an appropriate exception
         end
@@ -45,8 +45,8 @@ module Gorbe
             visit(node)
           end
         else
-          Gorbe.debug('Not supported AST node!')
-          Gorbe.debug(ast)
+          Gorbe.logger.fatal('Not supported AST node!')
+          Gorbe.logger.debug(ast)
           raise # TODO : Raise an appropriate exception
         end
 
@@ -54,9 +54,9 @@ module Gorbe
       end
 
       def visit_general(node)
-        Gorbe.debug("AST node '#{node[0]}' is currently not supported yet." +
+        Gorbe.logger.error("AST node '#{node[0]}' is currently not supported yet." +
           'Please contact us via https://github.com/OkamotoYuki/gorbe/issues.')
-        Gorbe.debug(node)
+        Gorbe.logger.debug(node)
         raise # TODO : Raise an appropriate exception
       end
     end
