@@ -24,15 +24,15 @@ module Gorbe
     }
 
     def initialize(log_level=:info)
-      @writer = Gorbe::Compiler::Writer.new
       Gorbe::logger = Logger.new(STDERR)
-      Gorbe::logger.level = LOG_LEVEL[:info]
+      Gorbe::logger.level = LOG_LEVEL[log_level]
     end
 
     # Compile Ruby code to Go code
     def compile(code)
       ast = Ripper.sexp(code)
       Gorbe.logger.debug(ast)
+      pp ast # TODO : Remove this line
       generate_go_code ast
     end
 
@@ -48,9 +48,9 @@ module Gorbe
       toplevel = Compiler::TopLevel.new
       visitor = Compiler::StatementVisitor.new(toplevel)
 
-      @writer.generate_header('hello', '"hello"') # TODO : Give package and script info
+      Compiler.generate_header('hello', '"hello"') # TODO : Give package and script info
       visitor.visit(ast)
-      @writer.generate_footer('"hello"')
+      Compiler.generate_footer('"hello"')
     end
   end
 

@@ -55,7 +55,7 @@ module Gorbe
 
       def visit_general(node)
         Gorbe.logger.error("AST node '#{node[0]}' is currently not supported yet." +
-          'Please contact us via https://github.com/OkamotoYuki/gorbe/issues.')
+                               'Please contact us via https://github.com/OkamotoYuki/gorbe/issues.')
         Gorbe.logger.debug(node)
         raise # TODO : Raise an appropriate exception
       end

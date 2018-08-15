@@ -3,7 +3,7 @@ require 'gorbe'
 
 class CoreTest < Minitest::Test
   def setup
-    @gorbe = Gorbe::Core.new
+    @gorbe = Gorbe::Core.new(:debug)
   end
 
   def teardown
