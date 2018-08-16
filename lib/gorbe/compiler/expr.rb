@@ -19,7 +19,7 @@ module Gorbe
       }
 
       def initialize(stmt_visitor)
-        super(parent: stmt_visitor, nodetype_map:
+        super(parent: stmt_visitor, writer:  stmt_visitor.writer, nodetype_map:
             {
                 binary: 'binop',
                 '@int': 'int'

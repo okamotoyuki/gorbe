@@ -46,11 +46,13 @@ module Gorbe
     # Generate Go code from Ruby AST
     def generate_go_code(ast)
       toplevel = Compiler::TopLevel.new
-      visitor = Compiler::StatementVisitor.new(toplevel)
+      writer = Compiler::Writer.new
+      visitor = Compiler::StatementVisitor.new(toplevel, writer)
 
-      Compiler.generate_header('hello', '"hello"') # TODO : Give package and script info
+      writer.write_header('hello', '"hello"') # TODO : Give package and script info
       visitor.visit(ast)
-      Compiler.generate_footer('"hello"')
+      writer.write_footer('"hello"')
+      writer.flush
     end
   end
 

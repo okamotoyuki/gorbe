@@ -5,10 +5,12 @@ module Gorbe
     class Visitor
       attr_reader :depth
       attr_reader :parent
+      attr_reader :writer
 
-      def initialize(block: nil, parent: nil, nodetype_map: {})
+      def initialize(block: nil, parent: nil, writer: nil, nodetype_map: {})
         @block = block
         @parent = parent
+        @writer = writer
         @nodetype_map = nodetype_map
         @depth = 0
       end
