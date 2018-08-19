@@ -32,7 +32,7 @@ module Gorbe
     def compile(code)
       ast = Ripper.sexp(code)
       Gorbe.logger.debug(ast)
-      pp ast # TODO : Remove this line
+      PP.pp(ast, STDERR) # TODO : Remove this line
       generate_go_code ast
     end
 
