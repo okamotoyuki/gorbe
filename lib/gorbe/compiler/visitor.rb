@@ -3,9 +3,10 @@ module Gorbe
 
     # A visitor class for traversing Ruby AST
     class Visitor
-      attr_reader :depth
+      attr_reader :block
       attr_reader :parent
       attr_reader :writer
+      attr_reader :depth
 
       def initialize(block: nil, parent: nil, writer: nil, nodetype_map: {})
         @block = block
@@ -38,10 +39,11 @@ module Gorbe
           raise # TODO : Raise an appropriate exception
         end
 
+        ret = nil # Return value
         if ast[0].is_a?(Symbol)
           nodetype =
             @nodetype_map.key?(ast[0]) ? @nodetype_map[ast[0]] : 'general'
-          send("visit_#{nodetype}", ast)
+          ret = send("visit_#{nodetype}", ast)
         elsif ast[0].is_a?(Array)
           ast.each do |node|
             visit(node)
@@ -53,6 +55,7 @@ module Gorbe
         end
 
         @depth -= 1
+        return ret
       end
 
       def visit_general(node)

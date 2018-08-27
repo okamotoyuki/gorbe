@@ -50,7 +50,9 @@ module Gorbe
       visitor = Compiler::StatementVisitor.new(toplevel, writer)
 
       writer.write_header('hello', '"hello"') # TODO : Give package and script info
-      visitor.visit(ast)
+      writer.indent_block(2) do
+        visitor.visit(ast)
+      end
       writer.write_footer('"hello"')
       writer.flush
     end
