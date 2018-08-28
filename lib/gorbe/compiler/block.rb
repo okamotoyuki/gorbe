@@ -1,3 +1,5 @@
+require 'set'
+
 module Gorbe
   module Compiler
 
@@ -9,7 +11,8 @@ module Gorbe
     end
 
     class Block
-      # Represents a Ruby block
+      attr_reader :free_temps
+      attr_reader :used_temps
 
       def initialize(parent=nil, name=nil)
         # @root
@@ -38,17 +41,6 @@ module Gorbe
         @used_temps.add(v)
         return v
       end
-    # for v in sorted(self.free_temps, key=lambda k: k.name):
-    #   if v.type_ == type_:
-    #     self.free_temps.remove(v)
-    #     self.used_temps.add(v)
-    #     return v
-    # self.temp_index += 1
-    # name = 'πTemp{:03d}'.format(self.temp_index)
-    # v = expr.GeneratedTempVar(self, name, type_)
-    # self.used_temps.add(v)
-    # return v
-
     end
 
     class TopLevel < Block

@@ -5,8 +5,8 @@ module Gorbe
 
     class StatementVisitor < Visitor
 
-      def initialize(block, writer)
-        super(block: block, writer: writer, nodetype_map:
+      def initialize(block)
+        super(block: block, writer: Writer.new, nodetype_map:
             {
                 program: 'program',
                 binary: 'expr'

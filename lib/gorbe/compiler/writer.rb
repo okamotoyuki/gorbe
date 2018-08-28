@@ -4,10 +4,14 @@ module Gorbe
     # A class for writing Go code
     class Writer
 
-      def initialize(out=STDOUT)
+      def initialize(out=StringIO.new())
         @out=out
-        @buffer = ''
         @indent_level = 0
+      end
+
+      def value
+        @out.rewind
+        return @out.read
       end
 
       def indent(n=1)
@@ -26,33 +30,32 @@ module Gorbe
 
       def write(code)
         code.lines.each do |line|
-          @buffer += "\t" * @indent_level + line
+          @out.puts("\t" * @indent_level + line)
         end
       end
 
-      # Generate header of Go code TODO : Consider scope of top level and module
-      def write_header(package, script)
-        code = <<~EOS
-          package #{package}
-          import πg "grumpy"
-          var Code *πg.Code
-          func init() {
-          \tCode = πg.NewCode("<module>", #{script}, nil, 0, func(πF *πg.Frame, _ []*πg.Object) (*πg.Object, *πg.BaseException) {
-          \t\tvar πR *πg.Object; _ = πR
-          \t\tvar πE *πg.BaseException; _ = πE
-        EOS
-        @buffer += code
+      def write_block(block, body)
+        write('for ; πF.State() >= 0; πF.PopCheckpoint() {')
+        indent_block do
+          write('switch πF.State() {')
+          write('case 0:')
+          # block.checkpoints.each do |checkpoint|
+          #   write("case #{checkpoint}: goto Label#{checkpoint}")
+          # end
+          write('default: panic("unexpected function state")')
+          write('}')
+          indent_block(-1) do
+            write(body)
+          end
+        end
+        write('}')
       end
 
-      # Generate footer of Go code
-      def write_footer(modname)
-        code = <<~EOS
-          \t\treturn nil, πE
-          \t})
-          \tπg.RegisterModule(#{modname}, Code)
-          }
-        EOS
-        @buffer += code
+      def write_temp_decls(block)
+        all_temps = block.free_temps | block.used_temps
+        all_temps.sort { |v1, v2| v1.name <=> v2.name } .each do |temp|
+          write("var %s %s\n_ = %s" % [temp.name, temp.type, temp.name])
+        end
       end
 
       def write_checked_call2(result, call)
@@ -63,11 +66,7 @@ module Gorbe
         EOS
         write(code)
       end
-
-      def flush
-        @out.puts(@buffer)
-      end
-
     end
+
   end
 end

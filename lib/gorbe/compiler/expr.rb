@@ -3,8 +3,9 @@ module Gorbe
 
     # A class which stands an expression in generated Go code.
     class Expr
-      attr_accessor :name
-      attr_accessor :expr
+      attr_reader :name
+      attr_reader :type
+      attr_reader :expr
 
       def initialize(block: nil, name: '', type: nil, expr: nil)
         @block = block
@@ -99,29 +100,6 @@ module Gorbe
         expr_str = "NewInt(%d)" % node[1]
         return Literal.new(expr: 'πg.' + expr_str + '.ToObject()')
       end
-
-
-      # def visit_Num(self, node):
-      #   if isinstance(node.n, int):
-      #     expr_str = 'NewInt({})'.format(node.n)
-      #   elif isinstance(node.n, long):
-      #     a = abs(node.n)
-      #     gobytes = ''
-      #     while a:
-      #       gobytes = hex(int(a&255)) + ',' + gobytes
-      #       a >>= 8
-      #     expr_str = 'NewLongFromBytes([]byte{{{}}})'.format(gobytes)
-      #     if node.n < 0:
-      #       expr_str = expr_str + '.Neg()'
-      #   elif isinstance(node.n, float):
-      #     expr_str = 'NewFloat({})'.format(node.n)
-      #   elif isinstance(node.n, complex):
-      #     expr_str = 'NewComplex(complex({}, {}))'.format(node.n.real, node.n.imag)
-      #   else:
-      #     msg = 'number type not yet implemented: ' + type(node.n).__name__
-      #     raise util.ParseError(node, msg)
-      #   return expr.GeneratedLiteral('πg.' + expr_str + '.ToObject()')
-
     end
 
   end

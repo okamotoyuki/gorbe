@@ -46,15 +46,40 @@ module Gorbe
     # Generate Go code from Ruby AST
     def generate_go_code(ast)
       toplevel = Compiler::TopLevel.new
-      writer = Compiler::Writer.new
-      visitor = Compiler::StatementVisitor.new(toplevel, writer)
+      visitor = Compiler::StatementVisitor.new(toplevel)
 
-      writer.write_header('hello', '"hello"') # TODO : Give package and script info
-      writer.indent_block(2) do
+      visitor.writer.indent_block do
         visitor.visit(ast)
       end
-      writer.write_footer('"hello"')
-      writer.flush
+
+      writer = Compiler::Writer.new(STDOUT)
+
+      package = 'hello'   # temporary
+      script = '"hello"'  # temporary
+      header = <<~EOS
+        package #{package}
+        import πg "grumpy"
+        var Code *πg.Code
+        func init() {
+        \tCode = πg.NewCode("<module>", #{script}, nil, 0, func(πF *πg.Frame, _ []*πg.Object) (*πg.Object, *πg.BaseException) {
+        \t\tvar πR *πg.Object; _ = πR
+        \t\tvar πE *πg.BaseException; _ = πE
+      EOS
+      writer.write(header)
+
+      writer.indent_block(2) do
+        writer.write_temp_decls(toplevel)
+        writer.write_block(toplevel, visitor.writer.value)
+      end
+
+      modname = '"hello"'
+      footer = <<~EOS
+        \t\treturn nil, πE
+        \t})
+        \tπg.RegisterModule(#{modname}, Code)
+        }
+      EOS
+      writer.write(footer)
     end
   end
 
