@@ -26,7 +26,7 @@ module Gorbe
 
       def visit_expr(node)
         log_activity(__method__.to_s)
-        @expr_visitor.visit(node)
+        @expr_visitor.visit(node).free
       end
 
     end

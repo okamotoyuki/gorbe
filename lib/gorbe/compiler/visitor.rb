@@ -39,11 +39,11 @@ module Gorbe
           raise # TODO : Raise an appropriate exception
         end
 
-        ret = nil # Return value
+        result = nil # Return value
         if ast[0].is_a?(Symbol)
           nodetype =
             @nodetype_map.key?(ast[0]) ? @nodetype_map[ast[0]] : 'general'
-          ret = send("visit_#{nodetype}", ast)
+          result = send("visit_#{nodetype}", ast)
         elsif ast[0].is_a?(Array)
           ast.each do |node|
             visit(node)
@@ -55,7 +55,7 @@ module Gorbe
         end
 
         @depth -= 1
-        return ret
+        return result
       end
 
       def visit_general(node)

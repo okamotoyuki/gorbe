@@ -37,9 +37,14 @@ module Gorbe
         end
         @temp_index += 1
         name = "πTemp%03d" % @temp_index
-        v = TempVar.new(name: name, type: type)
+        v = TempVar.new(block: self, name: name, type: type)
         @used_temps.add(v)
         return v
+      end
+
+      def free_temp_var(v)
+        @used_temps.delete(v)
+        @free_temps.add(v)
       end
     end
 

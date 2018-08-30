@@ -23,6 +23,10 @@ module Gorbe
       def initialize(block: nil, name: '', type: nil)
         super(block: block, name: name, type: type, expr: name)
       end
+
+      def free
+        @block.free_temp_var(self)
+      end
     end
 
     # A class which stands Go local var corresponding to a Python local.
@@ -92,6 +96,7 @@ module Gorbe
           raise # TODO : Raise an appropriate exception
         end
 
+        return result
       end
 
       def visit_int(node)
