@@ -69,13 +69,13 @@ module Gorbe
       def initialize(stmt_visitor)
         super(block: stmt_visitor.block, parent: stmt_visitor, writer:  stmt_visitor.writer, nodetype_map:
             {
-                binary: 'binop',
+                binary: 'binary',
                 '@int': 'int'
             }
         )
       end
 
-      def visit_binop(node)
+      def visit_binary(node)
         log_activity(__method__.to_s)
         raise if node.length != 4 # TODO : Raise an appropriate exception
 
