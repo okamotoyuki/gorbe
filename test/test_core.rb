@@ -57,10 +57,4 @@ class CoreTest < Minitest::Test
     @gorbe.compile_file(test_path)
     # TODO : Add assert function here
   end
-
-  def test_core_0_toplevel_99_print
-    test_path = get_test_path_from_method(__method__.to_s)
-    @gorbe.compile_file(test_path)
-    # TODO : Add assert function here
-  end
 end
