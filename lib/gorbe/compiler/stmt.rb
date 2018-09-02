@@ -9,7 +9,8 @@ module Gorbe
         super(block: block, writer: Writer.new, nodetype_map:
             {
                 program: 'program',
-                binary: 'expr'
+                binary: 'expr',
+                void_stmt: 'void_stmt'
             }
         )
         @expr_visitor = Compiler::ExprVisitor.new(self)
@@ -27,6 +28,10 @@ module Gorbe
       def visit_expr(node)
         log_activity(__method__.to_s)
         @expr_visitor.visit(node).free
+      end
+
+      def visit_void_stmt(node)
+        # Do nothing
       end
 
     end
