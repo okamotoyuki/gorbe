@@ -3,6 +3,8 @@ require 'set'
 module Gorbe
   module Compiler
 
+    NON_WORD_REGEX = Regexp.new('[^A-Za-z0-9_]')
+
     class Loop
 
       def initialize
@@ -15,7 +17,7 @@ module Gorbe
       attr_reader :used_temps
 
       def initialize(parent=nil, name=nil)
-        # @root
+        @root = parent ? parent.root : self
         @parent = parent
         @name = name
         @free_temps = Set.new
@@ -46,12 +48,32 @@ module Gorbe
         @used_temps.delete(v)
         @free_temps.add(v)
       end
+
+      private def resolve_global(writer, name)
+        result = alloc_temp_var()
+        writer.write_checked_call2(
+            result, "πg.ResolveGlobal(πF, %s)" % @root.intern(name))
+        return result
+      end
     end
 
     class TopLevel < Block
 
       def initialize
         super(nil, '<toplevel>')
+        @strings = Set.new()
+      end
+
+      def intern(s)
+        if s.length > 64 or NON_WORD_REGEX.match(s)
+            return "πg.NewStr(%s)" % Util::generate_go_str(s)
+        end
+        @strings.add(s)
+        return 'ß' + s
+      end
+
+      def resolve_name(writer, name)
+        return resolve_global(writer, name)
       end
 
     end

@@ -32,13 +32,8 @@ module Gorbe
     # A class which stands Go local var corresponding to a Python local.
     class LocalVar < Expr
       def initialize(name: '')
-        super(name: name, expr: convert2go(name))
+        super(name: name, expr: Util::get_go_identifier(name))
       end
-
-      def convert2go(name)
-        return 'µ' + name
-      end
-      private :convert2go
     end
 
     # A class which stands a literal in generated Go code.
@@ -70,6 +65,7 @@ module Gorbe
         super(block: stmt_visitor.block, parent: stmt_visitor, writer:  stmt_visitor.writer, nodetype_map:
             {
                 binary: 'binary',
+                var_ref: 'var_ref',
                 '@int': 'int'
             }
         )
@@ -77,7 +73,9 @@ module Gorbe
 
       def visit_binary(node)
         log_activity(__method__.to_s)
-        raise if node.length != 4 # TODO : Raise an appropriate exception
+
+        # e.g. [:binary, [:@int, "1", [1, 0]], :+, [:@int, "1", [1, 4]]]
+        raise unless node.length == 4 # TODO : Raise an appropriate exception
 
         lhs = self.visit(node[1])&.expr
         operator = node[2]
@@ -99,9 +97,31 @@ module Gorbe
         return result
       end
 
+      def visit_var_ref(node)
+        log_activity(__method__.to_s)
+
+        # e.g. [:var_ref, [:@kw, "true", [1, 0]]]
+        raise unless node.length == 2 # TODO : Raise an appropriate exception
+
+        kw = visit_kw(node[1])
+        return @block.resolve_name(@writer, kw)
+      end
+
+      def visit_kw(node)
+         log_activity(__method__.to_s)
+
+        # e.g. [:@kw, "true", [1, 0]]
+        raise unless node.length == 3 # TODO : Raise an appropriate exception
+
+        return node[1]
+      end
+
       def visit_int(node)
         log_activity(__method__.to_s)
-        raise if node.length != 3 # TODO : Raise an appropriate exception
+
+        # e.g. [:@int, "1", [1, 0]]
+        raise unless node.length == 3 # TODO : Raise an appropriate exception
+
         expr_str = "NewInt(%d)" % node[1]
         return Literal.new(expr: 'πg.' + expr_str + '.ToObject()')
       end

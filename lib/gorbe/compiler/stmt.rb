@@ -9,8 +9,9 @@ module Gorbe
         super(block: block, writer: Writer.new, nodetype_map:
             {
                 program: 'program',
+                void_stmt: 'void_stmt',
                 binary: 'expr',
-                void_stmt: 'void_stmt'
+                var_ref: 'expr'
             }
         )
         @expr_visitor = Compiler::ExprVisitor.new(self)
