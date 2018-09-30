@@ -3,6 +3,7 @@ require 'gorbe/compiler/expr'
 module Gorbe
   module Compiler
 
+    # A class which generates Go code based on Ruby AST (Statement).
     class StatementVisitor < Visitor
 
       def initialize(block)

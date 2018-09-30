@@ -44,6 +44,7 @@ module Gorbe
 
     end
 
+    # A class which generates Go code based on Ruby AST (Expression).
     class ExprVisitor < Visitor
 
       BIN_OP_TEMPLATES = {
@@ -75,12 +76,12 @@ module Gorbe
         log_activity(__method__.to_s)
 
         # e.g. [:binary, [:@int, "1", [1, 0]], :+, [:@int, "1", [1, 4]]]
-        raise unless node.length == 4 # TODO : Raise an appropriate exception
+        raise ParseError.new(node, msg: 'Node size must be 4.') unless node.length == 4
 
         lhs = self.visit(node[1])&.expr
         operator = node[2]
         rhs = self.visit(node[3])&.expr
-        raise unless lhs && rhs # TODO : Raise an appropriate exception
+        raise ParseError.new(node, msg: 'There is lack of operands.') unless lhs && rhs
 
         result = @block.alloc_temp_var()
 
@@ -88,10 +89,8 @@ module Gorbe
           call = BIN_OP_TEMPLATES[operator].call(lhs, rhs)
           @writer.write_checked_call2(result.name, call)
         else
-          Gorbe.logger.error("The operator '#{operator}' is not supported." +
-                                 'Please contact us via https://github.com/OkamotoYuki/gorbe/issues.')
-          Gorbe.logger.debug(node)
-          raise # TODO : Raise an appropriate exception
+          raise ParseError.new(node, "The operator '#{operator}' is not supported." +
+                                 'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
         end
 
         return result
@@ -101,7 +100,7 @@ module Gorbe
         log_activity(__method__.to_s)
 
         # e.g. [:var_ref, [:@kw, "true", [1, 0]]]
-        raise unless node.length == 2 # TODO : Raise an appropriate exception
+        raise ParseError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         kw = visit_kw(node[1])
         return @block.resolve_name(@writer, kw)
@@ -111,7 +110,7 @@ module Gorbe
          log_activity(__method__.to_s)
 
         # e.g. [:@kw, "true", [1, 0]]
-        raise unless node.length == 3 # TODO : Raise an appropriate exception
+        raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         return node[1]
       end
@@ -120,7 +119,7 @@ module Gorbe
         log_activity(__method__.to_s)
 
         # e.g. [:@int, "1", [1, 0]]
-        raise unless node.length == 3 # TODO : Raise an appropriate exception
+        raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         expr_str = "NewInt(%d)" % node[1]
         return Literal.new(expr: 'πg.' + expr_str + '.ToObject()')
