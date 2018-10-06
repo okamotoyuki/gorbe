@@ -74,7 +74,8 @@ module Gorbe
                 binary: 'binary',
                 unary: 'unary',
                 var_ref: 'var_ref',
-                '@int': 'int'
+                '@int': 'num',
+                '@float': 'num'
             }
         )
       end
@@ -97,7 +98,7 @@ module Gorbe
           @writer.write_checked_call2(result.name, call)
         else
           raise ParseError.new(node, "The operator '#{operator}' is not supported." +
-                                 'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
+              'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
         end
 
         return result
@@ -124,7 +125,7 @@ module Gorbe
           @writer.write("#{result.name} = πg.GetBool(!#{is_true.expr}).ToObject()")
         else
           raise ParseError.new(node, "The operator '#{operator}' is not supported." +
-                                 'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
+              'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
         end
 
         return result
@@ -141,7 +142,7 @@ module Gorbe
       end
 
       def visit_kw(node)
-         log_activity(__method__.to_s)
+        log_activity(__method__.to_s)
 
         # e.g. [:@kw, "true", [1, 0]]
         raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
@@ -149,13 +150,24 @@ module Gorbe
         return node[1]
       end
 
-      def visit_int(node)
+      def visit_num(node)
         log_activity(__method__.to_s)
 
         # e.g. [:@int, "1", [1, 0]]
         raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
-        expr_str = "NewInt(%d)" % node[1]
+        type = node[0]
+        number = node[1]
+        case type
+        when :@int then
+          expr_str = "NewInt(%d)" % number
+        when :@float then
+          expr_str = "NewFloat(%f)" % number
+        else
+          raise ParseError.new(node, "The number type '#{type}' is not supported." +
+              'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
+        end
+
         return Literal.new(expr: 'πg.' + expr_str + '.ToObject()')
       end
     end

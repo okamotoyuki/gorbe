@@ -14,6 +14,7 @@ module Gorbe
                 binary: 'expr',
                 unary: 'expr',
                 '@int': 'expr',
+                '@float': 'expr',
                 var_ref: 'expr'
             }
         )
