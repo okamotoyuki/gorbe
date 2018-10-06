@@ -12,6 +12,7 @@ module Gorbe
                 program: 'program',
                 void_stmt: 'void_stmt',
                 binary: 'expr',
+                '@int': 'expr',
                 var_ref: 'expr'
             }
         )
