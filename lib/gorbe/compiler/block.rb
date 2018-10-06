@@ -29,7 +29,7 @@ module Gorbe
         # @is_generator
       end
 
-      def alloc_temp_var(type: '*πg.Object')
+      def alloc_temp_var(type='*πg.Object')
         @free_temps.sort { |v1, v2| v1.name <=> v2.name } .each do |v|
           if v.type == type
             @free_temps.delete(v)

@@ -62,10 +62,17 @@ module Gorbe
           :- => lambda { |lhs, rhs| "πg.Sub(πF, #{lhs}, #{rhs})" }
       }
 
+
+      UNARY_OP_TEMPLATES = {
+          :~ => lambda { |operand| "πg.Invert(πF, #{operand})" },
+          :-@ => lambda { |operand| "πg.Neg(πF, #{operand})" }
+      }
+
       def initialize(stmt_visitor)
         super(block: stmt_visitor.block, parent: stmt_visitor, writer:  stmt_visitor.writer, nodetype_map:
             {
                 binary: 'binary',
+                unary: 'unary',
                 var_ref: 'var_ref',
                 '@int': 'int'
             }
@@ -88,6 +95,33 @@ module Gorbe
         if BIN_OP_TEMPLATES.has_key?(operator) then
           call = BIN_OP_TEMPLATES[operator].call(lhs, rhs)
           @writer.write_checked_call2(result.name, call)
+        else
+          raise ParseError.new(node, "The operator '#{operator}' is not supported." +
+                                 'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
+        end
+
+        return result
+      end
+
+      def visit_unary(node)
+        log_activity(__method__.to_s)
+
+        # e.g. [:unary, :-@, [:@int, "123", [1, 1]]]
+        raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        operator = node[1]
+        operand = self.visit(node[2])&.expr
+        raise ParseError.new(node, msg: 'There is lack of operands.') unless operand
+
+        result = @block.alloc_temp_var()
+
+        if UNARY_OP_TEMPLATES.has_key?(operator) then
+          call = UNARY_OP_TEMPLATES[operator].call(operand)
+          @writer.write_checked_call2(result.name, call)
+        elsif operator == :not
+          is_true = @block.alloc_temp_var('bool')
+          @writer.write_checked_call2(is_true.name, "πg.IsTrue(πF, #{operand})")
+          @writer.write("#{result.name} = πg.GetBool(!#{is_true.expr}).ToObject()")
         else
           raise ParseError.new(node, "The operator '#{operator}' is not supported." +
                                  'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
