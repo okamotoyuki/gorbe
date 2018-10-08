@@ -26,10 +26,17 @@ module Gorbe
 
       def visit_program(node)
         log_activity(__method__.to_s)
+
+        # e.g. [:program, [[:void_stmt]]]
+        raise ParseError.new(node, msg: 'Node size must be more than 1.') unless node.length > 1
+
+        result = nil
         children = node.slice(1..-1)
         children.each do |child|
-          visit(child)
+          result = visit(child)
         end
+
+        return result
       end
 
       def visit_assign(node)
@@ -41,6 +48,8 @@ module Gorbe
         target = visit(node[1])
         value = visit(node[2])
         @block.bind_var(@writer, target, value)
+
+        return value
       end
 
       def visit_expr(node)
@@ -62,7 +71,7 @@ module Gorbe
       def visit_var_field(node)
         log_activity(__method__.to_s)
 
-        # e.g. [:var_field, [:@ident, "foo", [1, 0]]],
+        # e.g. [:var_field, [:@ident, "foo", [1, 0]]]
         raise ParseError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         return visit(node[1])

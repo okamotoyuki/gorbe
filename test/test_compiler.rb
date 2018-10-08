@@ -1,7 +1,7 @@
 require 'minitest/autorun'
 require 'gorbe'
 
-class CoreTest < Minitest::Test
+class CompilerTest < Minitest::Test
   def setup
     @gorbe = Gorbe::Core.new(:debug)
   end
