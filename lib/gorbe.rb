@@ -6,7 +6,6 @@ require 'gorbe/compiler/stmt'
 require 'gorbe/compiler/util'
 
 require 'ripper'
-require 'pp'
 require 'logger'
 
 # A module for transpiling Ruby code to Go code
@@ -30,22 +29,23 @@ module Gorbe
     end
 
     # Compile Ruby code to Go code
-    def compile(code)
-      ast = Ripper.sexp(code)
+    def compile(input=STDIN, output=STDOUT)
+      # Ruby code -> Ruby AST
+      ast = Ripper.sexp(input.read)
       Gorbe.logger.debug(ast)
-      PP.pp(ast, STDERR) # TODO : Remove this line
-      generate_go_code ast
+
+      # Ruby AST -> Go code
+      return generate_go_code(ast, output)
     end
 
     # Compile Ruby code in a file to Go code
-    def compile_file(filepath)
-      File.open(filepath, 'r') do |file|
-        compile file
-      end
+    def compile_file(filepath, output=STDOUT)
+      file = File.open(filepath, 'r') # TODO : Add exception handling
+      return compile(file, output)
     end
 
     # Generate Go code from Ruby AST
-    def generate_go_code(ast)
+    def generate_go_code(ast, output)
       toplevel = Compiler::TopLevel.new
       visitor = Compiler::StatementVisitor.new(toplevel)
 
@@ -53,10 +53,10 @@ module Gorbe
         visitor.visit(ast)
       end
 
-      writer = Compiler::Writer.new(STDOUT)
+      writer = Compiler::Writer.new(output)
 
-      package = 'hello'   # temporary
-      script = '"hello"'  # temporary
+      package = 'gorbe'   # temporary
+      script = '"gorbe"'  # temporary
       header = <<~EOS
         package #{package}
         import πg "grumpy"
@@ -84,6 +84,7 @@ module Gorbe
         }
       EOS
       writer.write(footer)
+      return writer.out
     end
   end
 

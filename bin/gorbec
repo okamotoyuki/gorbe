@@ -5,7 +5,11 @@ require 'gorbe'
 
 def main
   gorbe = Gorbe::Core.new
-  gorbe.compile_file(ARGV[0])
+  unless ARGV[0].nil? then
+    gorbe.compile_file(ARGV[0])
+  else
+    gorbe.compile
+  end
 end
 
 main

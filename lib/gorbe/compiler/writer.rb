@@ -3,8 +3,9 @@ module Gorbe
 
     # A class for writing Go code
     class Writer
+      attr_reader :out
 
-      def initialize(out=StringIO.new())
+      def initialize(out=StringIO.new)
         @out=out
         @indent_level = 0
       end

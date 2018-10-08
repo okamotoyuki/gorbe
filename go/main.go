@@ -1,7 +1,7 @@
 package main
 
 import (
-	mod "./hello"
+	mod "../build/gorbe"
 	"grumpy"
 	"os"
 )
