@@ -58,9 +58,18 @@ module Gorbe
         end
       end
 
+      def write_checked_call1(call)
+        code = <<~EOS
+          if πE = #{call}; πE != nil {
+            continue
+          }
+        EOS
+        write(code)
+      end
+
       def write_checked_call2(result, call)
         code = <<~EOS
-          if #{result}, πE = #{call}; πE != nil {
+          if #{result.name}, πE = #{call}; πE != nil {
             continue
           }
         EOS

@@ -9,12 +9,15 @@ module Gorbe
       def initialize(block)
         super(block: block, writer: Writer.new, nodetype_map:
             {
+                assign: 'assign',
                 program: 'program',
                 void_stmt: 'void_stmt',
                 binary: 'expr',
                 unary: 'expr',
+                '@ident': 'ident',
                 '@int': 'expr',
                 '@float': 'expr',
+                var_field: 'var_field',
                 var_ref: 'expr'
             }
         )
@@ -24,15 +27,45 @@ module Gorbe
       def visit_program(node)
         log_activity(__method__.to_s)
         children = node.slice(1..-1)
-
         children.each do |child|
           visit(child)
         end
       end
 
+      def visit_assign(node)
+        log_activity(__method__.to_s)
+
+        # e.g. [:assign, [:var_field, [:@ident, "foo", [1, 0]]], [:@int, "1", [1, 6]]]
+        raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        target = visit(node[1])
+        value = visit(node[2])
+        @block.bind_var(@writer, target, value)
+      end
+
       def visit_expr(node)
         log_activity(__method__.to_s)
-        @expr_visitor.visit(node).free
+
+        # TODO : Need some logic to reuse temporary variables
+        return @expr_visitor.visit(node).expr
+      end
+
+      def visit_ident(node)
+        log_activity(__method__.to_s)
+
+        # e.g. [:@ident, "foo", [1, 0]]
+        raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        return node[1]
+      end
+
+      def visit_var_field(node)
+        log_activity(__method__.to_s)
+
+        # e.g. [:var_field, [:@ident, "foo", [1, 0]]],
+        raise ParseError.new(node, msg: 'Node size must be 2.') unless node.length == 2
+
+        return visit(node[1])
       end
 
       def visit_void_stmt(node)

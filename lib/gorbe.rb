@@ -3,6 +3,7 @@ require 'gorbe/compiler/writer'
 require 'gorbe/compiler/visitor'
 require 'gorbe/compiler/block'
 require 'gorbe/compiler/stmt'
+require 'gorbe/compiler/util'
 
 require 'ripper'
 require 'pp'
@@ -68,6 +69,9 @@ module Gorbe
       writer.write(header)
 
       writer.indent_block(2) do
+        toplevel.strings.sort { |v1, v2| v1 <=> v2 } .each do |s|
+          writer.write("ß#{s} := πg.InternStr(#{Compiler::Util::generate_go_str(s)})")
+        end
         writer.write_temp_decls(toplevel)
         writer.write_block(toplevel, visitor.writer.value)
       end

@@ -29,6 +29,9 @@ module Gorbe
         # @is_generator
       end
 
+      def bind_var(writer, name, value)
+      end
+
       def alloc_temp_var(type='*πg.Object')
         @free_temps.sort { |v1, v2| v1.name <=> v2.name } .each do |v|
           if v.type == type
@@ -58,15 +61,20 @@ module Gorbe
     end
 
     class TopLevel < Block
+      attr_reader :strings
 
       def initialize
         super(nil, '<toplevel>')
-        @strings = Set.new()
+        @strings = Set.new
+      end
+
+      def bind_var(writer, name, value)
+        writer.write_checked_call1("πF.Globals().SetItem(πF, #{intern(name)}.ToObject(), #{value})")
       end
 
       def intern(s)
         if s.length > 64 or NON_WORD_REGEX.match(s)
-            return "πg.NewStr(%s)" % Util::generate_go_str(s)
+          return "πg.NewStr(%s)" % Util::generate_go_str(s)
         end
         @strings.add(s)
         return 'ß' + s

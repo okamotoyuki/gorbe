@@ -95,7 +95,7 @@ module Gorbe
 
         if BIN_OP_TEMPLATES.has_key?(operator) then
           call = BIN_OP_TEMPLATES[operator].call(lhs, rhs)
-          @writer.write_checked_call2(result.name, call)
+          @writer.write_checked_call2(result, call)
         else
           raise ParseError.new(node, "The operator '#{operator}' is not supported." +
               'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
@@ -118,10 +118,10 @@ module Gorbe
 
         if UNARY_OP_TEMPLATES.has_key?(operator) then
           call = UNARY_OP_TEMPLATES[operator].call(operand)
-          @writer.write_checked_call2(result.name, call)
+          @writer.write_checked_call2(result, call)
         elsif operator == :not
           is_true = @block.alloc_temp_var('bool')
-          @writer.write_checked_call2(is_true.name, "πg.IsTrue(πF, #{operand})")
+          @writer.write_checked_call2(is_true, "πg.IsTrue(πF, #{operand})")
           @writer.write("#{result.name} = πg.GetBool(!#{is_true.expr}).ToObject()")
         else
           raise ParseError.new(node, "The operator '#{operator}' is not supported." +
