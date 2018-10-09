@@ -36,7 +36,7 @@ module Gorbe
         if ast.empty?
           Gorbe.logger.fatal('Node shouldn\'t be empty.')
           @depth -= 1
-          raise ParseError.new(node, msg: 'Node shouldn\'t be empty.')
+          raise ParseError.new(ast, msg: 'Node shouldn\'t be empty.')
         end
 
         result = nil # Return value
@@ -46,7 +46,7 @@ module Gorbe
           result = send("visit_#{nodetype}", ast)
         elsif ast[0].is_a?(Array)
           ast.each do |node|
-            visit(node)
+            result = visit(node)
           end
         else
           raise ParseError.new(ast, msg: 'Not supported AST node.')
