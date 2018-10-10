@@ -31,14 +31,14 @@ module Gorbe
 
     # A class which stands Go local var corresponding to a Python local.
     class LocalVar < Expr
-      def initialize(name: '')
+      def initialize(name='')
         super(name: name, expr: Util::get_go_identifier(name))
       end
     end
 
     # A class which stands a literal in generated Go code.
     class Literal < Expr
-      def initialize(expr: nil)
+      def initialize(expr=nil)
         super(expr: expr)
       end
 
@@ -75,7 +75,8 @@ module Gorbe
                 unary: 'unary',
                 var_ref: 'var_ref',
                 '@int': 'num',
-                '@float': 'num'
+                '@float': 'num',
+                '@kw': 'kw'
             }
         )
       end
@@ -86,18 +87,18 @@ module Gorbe
         # e.g. [:binary, [:@int, "1", [1, 0]], :+, [:@int, "1", [1, 4]]]
         raise ParseError.new(node, msg: 'Node size must be 4.') unless node.length == 4
 
-        lhs = self.visit(node[1])&.expr
+        lhs = visit(node[1])&.expr
         operator = node[2]
-        rhs = self.visit(node[3])&.expr
+        rhs = visit(node[3])&.expr
         raise ParseError.new(node, msg: 'There is lack of operands.') unless lhs && rhs
 
-        result = @block.alloc_temp_var()
+        result = @block.alloc_temp_var
 
         if BIN_OP_TEMPLATES.has_key?(operator) then
           call = BIN_OP_TEMPLATES[operator].call(lhs, rhs)
           @writer.write_checked_call2(result, call)
         else
-          raise ParseError.new(node, "The operator '#{operator}' is not supported." +
+          raise ParseError.new(node, msg: "The operator '#{operator}' is not supported. " +
               'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
         end
 
@@ -111,10 +112,10 @@ module Gorbe
         raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         operator = node[1]
-        operand = self.visit(node[2])&.expr
+        operand = visit(node[2])&.expr
         raise ParseError.new(node, msg: 'There is lack of operands.') unless operand
 
-        result = @block.alloc_temp_var()
+        result = @block.alloc_temp_var
 
         if UNARY_OP_TEMPLATES.has_key?(operator) then
           call = UNARY_OP_TEMPLATES[operator].call(operand)
@@ -124,7 +125,7 @@ module Gorbe
           @writer.write_checked_call2(is_true, "πg.IsTrue(πF, #{operand})")
           @writer.write("#{result.name} = πg.GetBool(!#{is_true.expr}).ToObject()")
         else
-          raise ParseError.new(node, "The operator '#{operator}' is not supported." +
+          raise ParseError.new(node, msg: "The operator '#{operator}' is not supported. " +
               'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
         end
 
@@ -137,7 +138,9 @@ module Gorbe
         # e.g. [:var_ref, [:@kw, "true", [1, 0]]]
         raise ParseError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
-        kw = visit_kw(node[1])
+        kw = visit(node[1])
+        raise ParseError.new(node, msg: 'Keyword mult not be nil.') if kw.nil?
+
         return @block.resolve_name(@writer, kw)
       end
 
@@ -164,11 +167,11 @@ module Gorbe
         when :@float then
           expr_str = "NewFloat(%f)" % number
         else
-          raise ParseError.new(node, "The number type '#{type}' is not supported." +
+          raise ParseError.new(node, "The number type '#{type}' is not supported ." +
               'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
         end
 
-        return Literal.new(expr: 'πg.' + expr_str + '.ToObject()')
+        return Literal.new('πg.' + expr_str + '.ToObject()')
       end
     end
 

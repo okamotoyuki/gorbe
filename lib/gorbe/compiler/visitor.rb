@@ -34,8 +34,8 @@ module Gorbe
         @depth += 1
 
         if ast.empty?
-          Gorbe.logger.fatal('Node shouldn\'t be empty.')
           @depth -= 1
+          Gorbe.logger.fatal('Node shouldn\'t be empty.')
           raise ParseError.new(ast, msg: 'Node shouldn\'t be empty.')
         end
 
@@ -57,7 +57,7 @@ module Gorbe
       end
 
       def visit_general(node)
-        raise ParseError.new(node, "AST node '#{node[0]}' is currently not supported yet." +
+        raise ParseError.new(node, "AST node '#{node[0]}' is currently not supported yet. " +
                                'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
       end
     end

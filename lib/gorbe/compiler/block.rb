@@ -53,7 +53,7 @@ module Gorbe
       end
 
       private def resolve_global(writer, name)
-        result = alloc_temp_var()
+        result = alloc_temp_var
         writer.write_checked_call2(
             result, "πg.ResolveGlobal(πF, %s)" % @root.intern(name))
         return result
