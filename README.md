@@ -1,9 +1,9 @@
 # Gorbe
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/gorbe`. To experiment with that code, run `bin/console` for an interactive prompt.
+Gorbe is a Ruby to Go source compiler.
+Gorbe uses [grumpy](https://github.com/google/grumpy) for the runtime but itself also has some extension for the Ruby support.
 
-TODO: Delete this and the text above, and describe your gem
-
+<!--
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -19,10 +19,38 @@ And then execute:
 Or install it yourself as:
 
     $ gem install gorbe
+-->
 
 ## Usage
 
-TODO: Write usage instructions here
+### Compile Ruby to Go source
+
+```bash
+$ cd bin
+$ echo "1 + 1" | ./gorbec
+```
+
+### Compile Ruby to Go source and run it on Grumpy
+
+1. Clone [grumpy](https://github.com/google/grumpy)
+2. Set paths for grumpy 
+    ```bash
+    $ cd grumpy
+    $ make
+    $ export PATH=$PWD/build/bin:$PATH
+    $ export GOPATH=$PWD/build
+    $ export PYTHONPATH=$PWD/build/lib/python2.7/site-packages
+    ```
+3. Run
+    ```bash
+    $ echo "1 + 1" | rake run
+    ```
+    
+### Run test
+    
+```bash
+$ rake test
+```
 
 ## Development
 
