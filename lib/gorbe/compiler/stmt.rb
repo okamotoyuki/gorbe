@@ -18,7 +18,8 @@ module Gorbe
                 '@int': 'expr',
                 '@float': 'expr',
                 var_field: 'var_field',
-                var_ref: 'expr'
+                var_ref: 'expr',
+                string_literal: 'expr'
             }
         )
         @expr_visitor = Compiler::ExprVisitor.new(self)

@@ -15,6 +15,7 @@ module Gorbe
     class Block
       attr_reader :free_temps
       attr_reader :used_temps
+      attr_reader :root
 
       def initialize(parent=nil, name=nil)
         @root = parent ? parent.root : self

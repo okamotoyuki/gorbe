@@ -74,6 +74,8 @@ module Gorbe
                 binary: 'binary',
                 unary: 'unary',
                 var_ref: 'var_ref',
+                string_literal: 'string_literal',
+                string_content: 'string_content',
                 '@int': 'num',
                 '@float': 'num',
                 '@kw': 'kw'
@@ -173,6 +175,33 @@ module Gorbe
 
         return Literal.new('πg.' + expr_str + '.ToObject()')
       end
+
+      def visit_string_literal(node)
+        log_activity(__method__.to_s)
+
+        # e.g. [:string_literal, [:string_content, [:@tstring_content, "this is a string expression\\n", [1, 1]]]]
+        raise ParseError.new(node, msg: 'Node size must be 2.') unless node.length == 2
+
+        # TODO : Check if the string is unicode and generate 'πg.NewUnicode({}).ToObject()'
+
+        str = visit(node[1])
+        expr_str = "%s.ToObject()" % @block.root.intern(str)
+        return Literal.new(expr_str)
+      end
+
+      def visit_string_content(node)
+        log_activity(__method__.to_s)
+
+        # e.g. [:string_content, [:@tstring_content, "this is a string expression\\n", [1, 1]]]
+        raise ParseError.new(node, msg: 'Node size must be 2.') unless node.length == 2
+
+        # TODO : Consider string content types other than '@tstring_content'
+
+        raise ParseError.new(node, msg: 'There is something wrong with the node.') unless node[1].is_a?(Array) && node[1].length == 3
+
+        return node[1][1]
+      end
+
     end
 
   end
