@@ -1,6 +1,6 @@
 # Gorbe
 
-Gorbe is a Ruby to Go source compiler.
+Gorbe is a Ruby to Go source code compiler.
 Gorbe uses [grumpy](https://github.com/google/grumpy) for the runtime but itself also has some extension for the Ruby support.
 
 <!--
@@ -23,14 +23,14 @@ Or install it yourself as:
 
 ## Usage
 
-### Compile Ruby to Go source
+### Compile Ruby to Go source code
 
 ```bash
 $ cd bin
 $ echo "1 + 1" | ./gorbec
 ```
 
-### Compile Ruby to Go source and run it on Grumpy
+### Compile Ruby to Go source code and immediately run it on Grumpy
 
 1. Clone [grumpy](https://github.com/google/grumpy)
 2. Set paths for grumpy 
