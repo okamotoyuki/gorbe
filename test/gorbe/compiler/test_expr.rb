@@ -123,4 +123,22 @@ class ExprVisitorTest < Minitest::Test
     end
   end
 
+  def test_visit_string_literal
+    node = [:string_literal, [:string_content, [:@tstring_content, 'this is a string expression\\n', [1, 1]]]]
+    @expr_visitor.stub(:log_activity, nil) do
+      visit_mock = MiniTest::Mock.new
+      visit_mock.expect(:call, node[1][1], [node[1]])
+
+      @expr_visitor.stub(:visit, visit_mock) do
+        intern_mock = MiniTest::Mock.new
+        intern_mock.expect(:call, 'πg.NewStr("this is a string expression\\\\n")', [node[1][1]])
+
+        @expr_visitor.block.root.stub(:intern, intern_mock) do
+          result = @expr_visitor.visit_string_literal(node)
+          assert_equal('πg.NewStr("this is a string expression\\\\n").ToObject()', result.expr)
+        end
+      end
+    end
+  end
+
 end

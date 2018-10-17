@@ -197,7 +197,9 @@ module Gorbe
 
         # TODO : Consider string content types other than '@tstring_content'
 
-        raise ParseError.new(node, msg: 'There is something wrong with the node.') unless node[1].is_a?(Array) && node[1].length == 3
+        unless node[1].is_a?(Array) && node[1].length == 3 && node[1][0] == :@tstring_content
+          raise ParseError.new(node, msg: 'There is something wrong with the node.')
+        end
 
         return node[1][1]
       end
