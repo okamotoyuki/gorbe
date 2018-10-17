@@ -1,3 +1,3 @@
-foo = 1
-bar = 2
-"foo: #{foo}, bar: #{bar}"
+# foo = 1
+# bar = 2
+# "foo: #{foo}, bar: #{bar}"
