@@ -78,7 +78,8 @@ module Gorbe
                 string_content: 'string_content',
                 '@int': 'num',
                 '@float': 'num',
-                '@kw': 'kw'
+                '@kw': 'kw',
+                '@tstring_content': 'tstring_content'
             }
         )
       end
@@ -195,13 +196,16 @@ module Gorbe
         # e.g. [:string_content, [:@tstring_content, "this is a string expression\\n", [1, 1]]]
         raise ParseError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
-        # TODO : Consider string content types other than '@tstring_content'
+        return visit(node[1])
+      end
 
-        unless node[1].is_a?(Array) && node[1].length == 3 && node[1][0] == :@tstring_content
-          raise ParseError.new(node, msg: 'There is something wrong with the node.')
-        end
+      def visit_tstring_content(node)
+        log_activity(__method__.to_s)
 
-        return node[1][1]
+        # e.g. [:@tstring_content, "this is a string expression\\n", [1, 1]]
+        raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        return node[1]
       end
 
     end
