@@ -241,7 +241,7 @@ module Gorbe
         log_activity(__method__.to_s)
 
         # e.g. [:hash, [:assoclist_from_args, [[:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]]]]
-        raise ParseError.new(node, msg: 'Node size must be more than 1.') unless node.length > 1
+        raise ParseError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         result = nil
         with(hash: @block.alloc_temp('*πg.Dict')) do |temps|
