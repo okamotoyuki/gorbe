@@ -2,7 +2,7 @@ module Gorbe
   module Compiler
 
     class Util
-      def self.generate_go_str(value)
+      def self.generate_go_string(value)
         return value.inspect.gsub(/\\\\/, '\\')
       end
 

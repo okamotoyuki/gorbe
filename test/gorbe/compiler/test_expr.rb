@@ -115,7 +115,7 @@ class ExprVisitorTest < Minitest::Test
     end
   end
 
-  def test_visit_num
+  def test_visit_num_positive
     node = [:@int, '1', [1, 0]]
     @expr_visitor.stub(:log_activity, nil) do
       result = @expr_visitor.visit_num(node)
@@ -123,20 +123,58 @@ class ExprVisitorTest < Minitest::Test
     end
   end
 
-  def test_visit_string_literal
-    node = [:string_literal, [:string_content, [:@tstring_content, 'this is a string expression\\n', [1, 1]]]]
+  def test_visit_num_negative
+    node = [:@int, 'a', [1, 0]]
     @expr_visitor.stub(:log_activity, nil) do
-      visit_mock = MiniTest::Mock.new
-      visit_mock.expect(:call, node[1][1], [node[1]])
+      e = assert_raises(ArgumentError) do
+        @expr_visitor.visit_num(node)
+      end
+      assert_equal('invalid value for Integer(): "a"', e.message)
+    end
+  end
 
-      @expr_visitor.stub(:visit, visit_mock) do
-        intern_mock = MiniTest::Mock.new
-        intern_mock.expect(:call, 'πg.NewStr("this is a string expression\\\\n")', [node[1][1]])
+  def test_visit_tstring_content
+    node = [:@tstring_content, 'this is a string expression\\n', [1, 1]]
+    @expr_visitor.stub(:log_activity, nil) do
+      result = @expr_visitor.visit_tstring_content(node)
+      assert_equal('πg.NewStr("this is a string expression\\n").ToObject()', result.expr)
+    end
+  end
 
-        @expr_visitor.block.root.stub(:intern, intern_mock) do
-          result = @expr_visitor.visit_string_literal(node)
-          assert_equal('πg.NewStr("this is a string expression\\\\n").ToObject()', result.expr)
+  def test_visit_tstring_negative
+    node = [:@tstring_content, [], [1, 1]]
+    @expr_visitor.stub(:log_activity, nil) do
+      e = assert_raises(TypeError) do
+        @expr_visitor.visit_tstring_content(node)
+      end
+      assert_equal('no implicit conversion of Array into String', e.message)
+    end
+  end
+
+  def test_visit_array_positive
+    node = [:array, [[:@int, '1', [1, 1]], [:@int, '2', [1, 4]], [:@int, '3', [1, 7]]]]
+    @expr_visitor.stub(:log_activity, nil) do
+      visit_sequential_elements_mock = MiniTest::Mock.new
+      visit_sequential_elements_mock.expect(:call, Gorbe::Compiler::TempVar.new(block: @expr_visitor.block, name: 'πTemp001', type: '[]*πg.Object'), [Array])
+
+      @expr_visitor.stub(:visit_sequential_elements, visit_sequential_elements_mock) do
+        result = @expr_visitor.visit_array(node)
+        assert_equal('*πg.Object', result.type)
+      end
+    end
+  end
+
+  def test_visit_array_negative
+    node = [:array, 1, [:@int, '2', [1, 4]], [:@int, '3', [1, 7]]]
+    @expr_visitor.stub(:log_activity, nil) do
+      visit_sequential_elements_mock = MiniTest::Mock.new
+      visit_sequential_elements_mock.expect(:call, Gorbe::Compiler::TempVar.new(block: @expr_visitor.block, name: 'πTemp001', type: '[]*πg.Object'), [Array])
+
+      @expr_visitor.stub(:visit_sequential_elements, visit_sequential_elements_mock) do
+        e = assert_raises(MockExpectationError) do
+          @expr_visitor.visit_array(node)
         end
+        assert_equal('mocked method :call called with unexpected arguments [1]', e.message)
       end
     end
   end

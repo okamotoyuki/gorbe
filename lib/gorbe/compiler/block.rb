@@ -75,7 +75,7 @@ module Gorbe
 
       def intern(s)
         if s.length > 64 or NON_WORD_REGEX.match(s)
-          return "πg.NewStr(%s)" % Util::generate_go_str(s)
+          return "πg.NewStr(%s)" % Util::generate_go_string(s)
         end
         @strings.add(s)
         return 'ß' + s

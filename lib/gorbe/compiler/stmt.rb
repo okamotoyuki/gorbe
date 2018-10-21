@@ -9,6 +9,7 @@ module Gorbe
       def initialize(block)
         super(block: block, writer: Writer.new, nodetype_map:
             {
+                array: 'expr',
                 assign: 'assign',
                 program: 'program',
                 void_stmt: 'void_stmt',

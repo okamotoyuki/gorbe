@@ -70,7 +70,7 @@ module Gorbe
 
       writer.indent_block(2) do
         toplevel.strings.sort { |v1, v2| v1 <=> v2 } .each do |s|
-          writer.write("ß#{s} := πg.InternStr(#{Compiler::Util::generate_go_str(s)})")
+          writer.write("ß#{s} := πg.InternStr(#{Compiler::Util::generate_go_string(s)})")
         end
         writer.write_temp_decls(toplevel)
         writer.write_block(toplevel, visitor.writer.value)

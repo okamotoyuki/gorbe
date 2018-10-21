@@ -71,6 +71,7 @@ module Gorbe
       def initialize(stmt_visitor)
         super(block: stmt_visitor.block, parent: stmt_visitor, writer:  stmt_visitor.writer, nodetype_map:
             {
+                array: 'array',
                 binary: 'binary',
                 unary: 'unary',
                 var_ref: 'var_ref',
@@ -185,9 +186,7 @@ module Gorbe
 
         # TODO : Check if the string is unicode and generate 'πg.NewUnicode({}).ToObject()'
 
-        str = visit(node[1])
-        expr_str = "%s.ToObject()" % @block.root.intern(str)
-        return Literal.new(expr_str)
+        return visit(node[1])
       end
 
       def visit_string_content(node)
@@ -205,9 +204,35 @@ module Gorbe
         # e.g. [:@tstring_content, "this is a string expression\\n", [1, 1]]
         raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
-        return node[1]
+        str = node[1]
+        expr_str = "%s.ToObject()" % @block.root.intern(str)
+        return Literal.new(expr_str)
       end
 
+      def visit_array(node)
+        log_activity(__method__.to_s)
+
+        # e.g. [:array, [[:@int, "1", [1, 1]], [:@int, "2", [1, 4]], [:@int, "3", [1, 7]]]
+        raise ParseError.new(node, msg: 'Node size must be more than 1.') unless node.length > 1
+
+        result = nil
+        with(elems: visit_sequential_elements(node[1])) do |args|
+          result = @block.alloc_temp_var
+          @writer.write("#{result.expr} = πg.NewList(#{args[:elems].expr}...).ToObject()")
+        end
+        return result
+      end
+
+      private def visit_sequential_elements(nodes)
+        result = @block.alloc_temp_var('[]*πg.Object')
+        @writer.write("#{result.expr} = make([]*πg.Object, #{nodes.length})")
+        nodes.each_with_index do |node, i|
+          with(elem: visit(node)) do |args|
+           @writer.write("#{result.expr}[#{i}] = #{args[:elem].expr}")
+          end
+        end
+        return result
+      end
     end
 
   end
