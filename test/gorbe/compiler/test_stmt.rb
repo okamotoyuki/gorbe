@@ -12,16 +12,6 @@ class StatementVisitorTest < Minitest::Test
     @stmt_visitor = nil
   end
 
-  def test_visit_program_positive
-    node = [:program, [[:assign, [:var_field, [:@ident, 'foo', [1, 0]]], [:@int, '1', [1, 6]]]]]
-    @stmt_visitor.stub(:log_activity, nil) do
-      @stmt_visitor.stub(:visit, 1) do
-        result = @stmt_visitor.visit_program(node)
-        assert_equal(1, result)
-      end
-    end
-  end
-
   def test_visit_program_negative
     node = [:program]
     @stmt_visitor.stub(:log_activity, nil) do
@@ -38,16 +28,16 @@ class StatementVisitorTest < Minitest::Test
     node = [:assign, [:var_field, [:@ident, 'foo', [1, 0]]], [:@int, '1', [1, 6]]]
     @stmt_visitor.stub(:log_activity, nil) do
       visit_mock = MiniTest::Mock.new
+      visit_mock.expect(:call, Gorbe::Compiler::Literal.new('πg.NewInt(1).ToObject()'), [node[2]])
       visit_mock.expect(:call, 'foo', [node[1]])
-      visit_mock.expect(:call, '1', [node[2]])
 
       @stmt_visitor.stub(:visit, visit_mock) do
         bind_var_mock = MiniTest::Mock.new
-        bind_var_mock.expect(:call, node[2], [Gorbe::Compiler::Writer, 'foo', '1'])
+        bind_var_mock.expect(:call, node[2], [Gorbe::Compiler::Writer, 'foo', 'πg.NewInt(1).ToObject()'])
 
         @stmt_visitor.block.stub(:bind_var, bind_var_mock) do
-          result = @stmt_visitor.visit_assign(node)
-          assert_equal('1', result)
+          @stmt_visitor.visit_assign(node)
+          assert(true)
         end
       end
     end

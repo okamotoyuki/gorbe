@@ -29,6 +29,16 @@ module Gorbe
         Gorbe.logger.debug('  ' * (depth - 1) + '(' + method_name + ')')
       end
 
+      # Do something with temporary variables
+      private def with(**args)
+        yield(args) if block_given?
+
+        # Free unused temporary values
+        args.each do |key, val|
+          val.free
+        end
+      end
+
       # Traverse Ruby AST
       def visit(ast)
         @depth += 1

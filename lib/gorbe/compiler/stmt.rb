@@ -31,13 +31,10 @@ module Gorbe
         # e.g. [:program, [[:void_stmt]]]
         raise ParseError.new(node, msg: 'Node size must be more than 1.') unless node.length > 1
 
-        result = nil
         children = node.slice(1..-1)
         children.each do |child|
-          result = visit(child)
+          visit(child)
         end
-
-        return result
       end
 
       def visit_assign(node)
@@ -46,18 +43,15 @@ module Gorbe
         # e.g. [:assign, [:var_field, [:@ident, "foo", [1, 0]]], [:@int, "1", [1, 6]]]
         raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
-        target = visit(node[1])
-        value = visit(node[2])
-        @block.bind_var(@writer, target, value)
-
-        return value
+        with(value: visit(node[2])) do |args|
+          target = visit(node[1])
+          @block.bind_var(@writer, target, args[:value].expr)
+        end
       end
 
       def visit_expr(node)
         log_activity(__method__.to_s)
-
-        # TODO : Need some logic to reuse temporary variables
-        return @expr_visitor.visit(node).expr
+        return @expr_visitor.visit(node)
       end
 
       def visit_ident(node)
