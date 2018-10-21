@@ -11,6 +11,7 @@ module Gorbe
             {
                 array: 'expr',
                 assign: 'assign',
+                hash: 'expr',
                 program: 'program',
                 void_stmt: 'void_stmt',
                 binary: 'expr',
@@ -44,9 +45,9 @@ module Gorbe
         # e.g. [:assign, [:var_field, [:@ident, "foo", [1, 0]]], [:@int, "1", [1, 6]]]
         raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
-        with(value: visit(node[2])) do |args|
+        with(value: visit(node[2])) do |temps|
           target = visit(node[1])
-          @block.bind_var(@writer, target, args[:value].expr)
+          @block.bind_var(@writer, target, temps[:value].expr)
         end
       end
 

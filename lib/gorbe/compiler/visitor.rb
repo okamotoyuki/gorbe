@@ -40,7 +40,7 @@ module Gorbe
       end
 
       # Traverse Ruby AST
-      def visit(ast)
+      def visit(ast, **args)
         @depth += 1
 
         if ast.empty?
@@ -50,10 +50,11 @@ module Gorbe
         end
 
         result = nil # Return value
-        if ast[0].is_a?(Symbol)
+        if ast[0].is_a?(Symbol) || ast[0].is_a?(String) # TODO : Should we actually consider "String" type?
           nodetype =
             @nodetype_map.key?(ast[0]) ? @nodetype_map[ast[0]] : 'general'
-          result = send("visit_#{nodetype}", ast)
+          result =
+            args.empty? ? send("visit_#{nodetype}", ast) : send("visit_#{nodetype}", ast, **args)
         elsif ast[0].is_a?(Array)
           ast.each do |node|
             result = visit(node)

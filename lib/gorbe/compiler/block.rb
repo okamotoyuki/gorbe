@@ -33,7 +33,7 @@ module Gorbe
       def bind_var(writer, name, value)
       end
 
-      def alloc_temp_var(type='*πg.Object')
+      def alloc_temp(type='*πg.Object')
         @free_temps.sort { |v1, v2| v1.name <=> v2.name } .each do |v|
           if v.type == type
             @free_temps.delete(v)
@@ -48,13 +48,13 @@ module Gorbe
         return v
       end
 
-      def free_temp_var(v)
+      def free_temp(v)
         @used_temps.delete(v)
         @free_temps.add(v)
       end
 
       private def resolve_global(writer, name)
-        result = alloc_temp_var
+        result = alloc_temp
         writer.write_checked_call2(
             result, "πg.ResolveGlobal(πF, %s)" % @root.intern(name))
         return result
