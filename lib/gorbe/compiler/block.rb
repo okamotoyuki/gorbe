@@ -24,13 +24,21 @@ module Gorbe
         @free_temps = Set.new
         @used_temps = Set.new
         @temp_index = 0
-        # @label_count
-        # @check_points
+        @label_count = 0
+        @check_points = Set.new
         # @loop_stack
         # @is_generator
       end
 
       def bind_var(writer, name, value)
+      end
+
+      def gen_label(is_checkpoint=false)
+        @label_count += 1
+        if is_checkpoint
+          @check_points.add(@label_count)
+        end
+        return @label_count
       end
 
       def alloc_temp(type='*πg.Object')

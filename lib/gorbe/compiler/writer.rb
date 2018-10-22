@@ -52,6 +52,12 @@ module Gorbe
         write('}')
       end
 
+      def write_label(label)
+        indent_block(-1) do
+          write("Label%d:" % label)
+        end
+      end
+
       def write_temp_decls(block)
         all_temps = block.free_temps | block.used_temps
         all_temps.sort { |v1, v2| v1.name <=> v2.name } .each do |temp|
@@ -71,7 +77,7 @@ module Gorbe
       def write_checked_call2(result, call)
         code = <<~EOS
           if #{result.name}, πE = #{call}; πE != nil {
-            continue
+          \tcontinue
           }
         EOS
         write(code)

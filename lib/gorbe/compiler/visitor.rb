@@ -29,7 +29,7 @@ module Gorbe
         Gorbe.logger.debug('  ' * (depth - 1) + '(' + method_name + ')')
       end
 
-      # Do something with temporary variables
+      # Do something with temporary variables and free them after that
       private def with(**args)
         yield(args) if block_given?
 
@@ -42,14 +42,14 @@ module Gorbe
       # Traverse Ruby AST
       def visit(ast, **args)
         @depth += 1
+        result = nil # Return value
 
         if ast.empty?
+          Gorbe.logger.debug('  ' * (depth - 1) + '(empty)')
           @depth -= 1
-          Gorbe.logger.fatal('Node shouldn\'t be empty.')
-          raise ParseError.new(ast, msg: 'Node shouldn\'t be empty.')
+          return result
         end
 
-        result = nil # Return value
         if ast[0].is_a?(Symbol) || ast[0].is_a?(String) # TODO : Should we actually consider "String" type?
           nodetype =
             @nodetype_map.key?(ast[0]) ? @nodetype_map[ast[0]] : 'general'
