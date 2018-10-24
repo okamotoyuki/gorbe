@@ -59,7 +59,13 @@ module Gorbe
           :* => lambda { |lhs, rhs| "πg.Mul(πF, #{lhs}, #{rhs})" },
           :** => lambda { |lhs, rhs| "πg.Pow(πF, #{lhs}, #{rhs})" },
           :>> => lambda { |lhs, rhs| "πg.RShift(πF, #{lhs}, #{rhs})" },
-          :- => lambda { |lhs, rhs| "πg.Sub(πF, #{lhs}, #{rhs})" }
+          :- => lambda { |lhs, rhs| "πg.Sub(πF, #{lhs}, #{rhs})" },
+          :== => lambda { |lhs, rhs| "πg.Eq(πF, #{lhs}, #{rhs})" },
+          :> => lambda { |lhs, rhs| "πg.GT(πF, #{lhs}, #{rhs})" },
+          :>= => lambda { |lhs, rhs| "πg.GE(πF, #{lhs}, #{rhs})" },
+          :< => lambda { |lhs, rhs| "πg.LT(πF, #{lhs}, #{rhs})" },
+          :<= => lambda { |lhs, rhs| "πg.LE(πF, #{lhs}, #{rhs})" },
+          :!= => lambda { |lhs, rhs| "πg.NE(πF, #{lhs}, #{rhs})" }
       }
 
 
