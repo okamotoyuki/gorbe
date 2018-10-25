@@ -105,19 +105,19 @@ module Gorbe
 
           # Set method name depending on the branch type
           when :if, :elsif, :if_mod then
-            method = 'IsTrue'
+            is_not = false
           when :unless, :unless_mod then
-            method = 'IsFalse'
+            is_not = true
           else
             raise CompileError.new(node, msg: 'Unsupported branch node.')
           end
 
           with(is_true: @block.alloc_temp('bool')) do |true_temps|
             template = <<~EOS
-              if #{true_temps[:is_true].expr}, πE = πg.#{method}(πF, #{cond_temps[:cond].expr}); πE != nil {
+              if #{true_temps[:is_true].expr}, πE = πg.IsTrue(πF, #{cond_temps[:cond].expr}); πE != nil {
               \tcontinue
               }
-              if #{true_temps[:is_true].expr} {
+              if #{is_not ? '!' : ''}#{true_temps[:is_true].expr} {
               \tgoto Label#{label}
               }
             EOS
