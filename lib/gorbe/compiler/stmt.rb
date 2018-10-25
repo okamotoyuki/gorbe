@@ -22,9 +22,10 @@ module Gorbe
                 var_field: 'var_field',
                 var_ref: 'expr',
                 string_literal: 'expr',
-                if: 'if_elsif',
-                if_mod: 'if_elsif',
-                elsif: 'if_elsif',
+                if: 'branch',
+                if_mod: 'branch',
+                elsif: 'branch',
+                unless: 'branch',
                 else: 'else'
             }
         )
@@ -82,7 +83,7 @@ module Gorbe
         # Do nothing
       end
 
-      def visit_if_elsif(node, **args)
+      def visit_branch(node, **args)
         log_activity(__method__.to_s)
 
         # e.g. [:if, [:var_ref, [:@kw, "true", [1, 3]]], [[:@int, "1", [2, 2]]],
@@ -99,10 +100,18 @@ module Gorbe
         # 'if' condition
         with(cond: visit(node[1])) do |cond_temps|
           label = @block.gen_label
+          case node[0]
+          when :if, :elsif, :if_mod then
+            method = 'IsTrue'
+          when :unless then
+            method = 'IsFalse'
+          else
+            raise CompileError.new(node, msg: 'Unsupported branch node.')
+          end
 
           with(is_true: @block.alloc_temp('bool')) do |true_temps|
             template = <<~EOS
-              if #{true_temps[:is_true].expr}, πE = πg.IsTrue(πF, #{cond_temps[:cond].expr}); πE != nil {
+              if #{true_temps[:is_true].expr}, πE = πg.#{method}(πF, #{cond_temps[:cond].expr}); πE != nil {
               \tcontinue
               }
               if #{true_temps[:is_true].expr} {
