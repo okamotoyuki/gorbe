@@ -4,5 +4,5 @@ else
   2
 end
 
-# 1 unless true
-# 1 unless false
+1 unless true
+1 unless false

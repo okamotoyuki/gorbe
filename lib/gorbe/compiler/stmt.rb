@@ -26,6 +26,7 @@ module Gorbe
                 if_mod: 'branch',
                 elsif: 'branch',
                 unless: 'branch',
+                unless_mod: 'branch',
                 else: 'else'
             }
         )
@@ -93,17 +94,19 @@ module Gorbe
         #      [:if_mod, [:var_ref, [:@kw, "true", [9, 5]]], [:@int, "1", [9, 0]]]
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 3 || node.length == 4
 
-        # 'if'/'else'/'elsif' bodies
+        # 'if'/'unless'/'else'/'elsif' bodies
         bodies = args[:bodies].nil? ? [] : args[:bodies]
 
         label = -1  # Initialize label
-        # 'if' condition
+        # 'if'/'unless' condition
         with(cond: visit(node[1])) do |cond_temps|
           label = @block.gen_label
           case node[0]
+
+          # Set method name depending on the branch type
           when :if, :elsif, :if_mod then
             method = 'IsTrue'
-          when :unless then
+          when :unless, :unless_mod then
             method = 'IsFalse'
           else
             raise CompileError.new(node, msg: 'Unsupported branch node.')
