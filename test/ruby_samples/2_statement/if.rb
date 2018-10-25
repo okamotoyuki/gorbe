@@ -5,3 +5,5 @@ elsif false then
 else
   3
 end
+
+1 if true
