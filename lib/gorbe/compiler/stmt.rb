@@ -34,7 +34,7 @@ module Gorbe
         log_activity(__method__.to_s)
 
         # e.g. [:program, [[:void_stmt]]]
-        raise ParseError.new(node, msg: 'Node size must be more than 1.') unless node.length > 1
+        raise CompileError.new(node, msg: 'Node size must be more than 1.') unless node.length > 1
 
         children = node.slice(1..-1)
         children.each do |child|
@@ -46,7 +46,7 @@ module Gorbe
         log_activity(__method__.to_s)
 
         # e.g. [:assign, [:var_field, [:@ident, "foo", [1, 0]]], [:@int, "1", [1, 6]]]
-        raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         with(value: visit(node[2])) do |temps|
           target = visit(node[1])
@@ -63,7 +63,7 @@ module Gorbe
         log_activity(__method__.to_s)
 
         # e.g. [:@ident, "foo", [1, 0]]
-        raise ParseError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         return node[1]
       end
@@ -72,7 +72,7 @@ module Gorbe
         log_activity(__method__.to_s)
 
         # e.g. [:var_field, [:@ident, "foo", [1, 0]]]
-        raise ParseError.new(node, msg: 'Node size must be 2.') unless node.length == 2
+        raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         return visit(node[1])
       end
@@ -87,7 +87,7 @@ module Gorbe
         # e.g. [:if, [:var_ref, [:@kw, "true", [1, 3]]], [[:@int, "1", [2, 2]]],
         #       [:elsif, [:var_ref, [:@kw, "false", [3, 6]]], [[:@int, "2", [4, 2]]],
         #       [:else, [[:@int, "3", [6, 2]]]]]]
-        raise ParseError.new(node, msg: 'Node size must be 4.') unless node.length == 4
+        raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
 
         # 'if'/'else'/'elsif' bodies
         bodies = args[:bodies].nil? ? [] : args[:bodies]
@@ -130,7 +130,7 @@ module Gorbe
         log_activity(__method__.to_s)
 
         # e.g. [:else, [[:@int, "3", [6, 2]]]]
-        raise ParseError.new(node, msg: 'Node size must be 2.') unless node.length == 2
+        raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         # 'if'/'else'/'elsif' bodies
         bodies = args[:bodies]

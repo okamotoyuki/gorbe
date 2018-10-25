@@ -37,7 +37,7 @@ class ExprVisitorTest < Minitest::Test
       visit_mock.expect(:call, Gorbe::Compiler::Literal.new(node[3][1]), [node[3]])
 
       @expr_visitor.stub(:visit, visit_mock) do
-        e = assert_raises(Gorbe::Compiler::ParseError) do
+        e = assert_raises(Gorbe::Compiler::CompileError) do
           result = @expr_visitor.visit_binary(node)
         end
         assert_equal('Node: [:binary, [:@int, "1", [1, 0]], :foo, [:@int, "1", [1, 4]]] ' +
@@ -67,7 +67,7 @@ class ExprVisitorTest < Minitest::Test
       visit_mock.expect(:call, Gorbe::Compiler::Literal.new(node[2][1]), [node[2]])
 
       @expr_visitor.stub(:visit, visit_mock) do
-        e = assert_raises(Gorbe::Compiler::ParseError) do
+        e = assert_raises(Gorbe::Compiler::CompileError) do
           result = @expr_visitor.visit_unary(node)
         end
         assert_equal('Node: [:unary, :foo, [:@int, "123", [1, 1]]] ' +
@@ -108,7 +108,7 @@ class ExprVisitorTest < Minitest::Test
             .expect(:call, Gorbe::Compiler::TempVar.new(name: 'πTemp001'), [Gorbe::Compiler::Writer, node[1][1]])
 
         @expr_visitor.block.stub(:resolve_name, resolve_name_mock) do
-          e = assert_raises(Gorbe::Compiler::ParseError) do
+          e = assert_raises(Gorbe::Compiler::CompileError) do
             result = @expr_visitor.visit_var_ref(node)
           end
           assert_equal('Node: [:var_ref, [:@kw, nil, [1, 0]]] - Keyword mult not be nil.', e.message)
@@ -203,7 +203,7 @@ class ExprVisitorTest < Minitest::Test
       visit_mock.expect(:call, nil, [node[1], Hash])
 
       @expr_visitor.stub(:visit, visit_mock) do
-        e = assert_raises(Gorbe::Compiler::ParseError) do
+        e = assert_raises(Gorbe::Compiler::CompileError) do
           @expr_visitor.visit_hash(node)
         end
         assert_equal('Node: [:hash, [:assoclist_from_args, [[:assoc_new, [:@int, "1", [1, 2]], ' +

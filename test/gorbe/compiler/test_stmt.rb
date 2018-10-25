@@ -16,7 +16,7 @@ class StatementVisitorTest < Minitest::Test
     node = [:program]
     @stmt_visitor.stub(:log_activity, nil) do
       @stmt_visitor.stub(:visit, 1) do
-        e = assert_raises(Gorbe::Compiler::ParseError) do
+        e = assert_raises(Gorbe::Compiler::CompileError) do
           @stmt_visitor.visit_program(node)
         end
         assert_equal('Node: [:program] - Node size must be more than 1.', e.message)
@@ -55,7 +55,7 @@ class StatementVisitorTest < Minitest::Test
         bind_var_mock.expect(:call, node[2], [Gorbe::Compiler::Writer, 'foo', '1'])
 
         @stmt_visitor.block.stub(:bind_var, bind_var_mock) do
-          e = assert_raises(Gorbe::Compiler::ParseError) do
+          e = assert_raises(Gorbe::Compiler::CompileError) do
             @stmt_visitor.visit_assign(node)
           end
           assert_equal('Node: [:assign, [:var_field, [:@ident, "foo", [1, 0]]]] - Node size must be 3.', e.message)
@@ -75,7 +75,7 @@ class StatementVisitorTest < Minitest::Test
   def test_visit_ident_negative
     node = [:@ident, 'foo']
     @stmt_visitor.stub(:log_activity, nil) do
-      e = assert_raises(Gorbe::Compiler::ParseError) do
+      e = assert_raises(Gorbe::Compiler::CompileError) do
         @stmt_visitor.visit_ident(node)
       end
       assert_equal('Node: [:@ident, "foo"] - Node size must be 3.', e.message)
@@ -102,7 +102,7 @@ class StatementVisitorTest < Minitest::Test
       visit_ident_mock.expect(:call, 'foo', [node[1]])
 
       @stmt_visitor.stub(:visit_ident, visit_ident_mock) do
-        e = assert_raises(Gorbe::Compiler::ParseError) do
+        e = assert_raises(Gorbe::Compiler::CompileError) do
           @stmt_visitor.visit_var_field(node)
         end
         assert_equal('Node: [:var_field, [:@ident, "foo", [1, 0]], []] - Node size must be 2.', e.message)

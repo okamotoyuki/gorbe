@@ -19,14 +19,6 @@ class VisitorTest < Minitest::Test
     @visitor = nil
   end
 
-  def test_visit_empty_node
-    node = []
-    e = assert_raises(Gorbe::Compiler::ParseError) do
-      @visitor.visit(node)
-    end
-    assert_equal('Node: [] - Node shouldn\'t be empty.', e.message)
-  end
-
   def test_visit_single_node
     node = [:stub, 1]
     result = @visitor.visit(node)
