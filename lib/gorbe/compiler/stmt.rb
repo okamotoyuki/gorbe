@@ -23,6 +23,7 @@ module Gorbe
                 var_ref: 'expr',
                 string_literal: 'expr',
                 if: 'if_elsif',
+                if_mod: 'if_elsif',
                 elsif: 'if_elsif',
                 else: 'else'
             }
@@ -87,7 +88,9 @@ module Gorbe
         # e.g. [:if, [:var_ref, [:@kw, "true", [1, 3]]], [[:@int, "1", [2, 2]]],
         #       [:elsif, [:var_ref, [:@kw, "false", [3, 6]]], [[:@int, "2", [4, 2]]],
         #       [:else, [[:@int, "3", [6, 2]]]]]]
-        raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
+        #
+        #      [:if_mod, [:var_ref, [:@kw, "true", [9, 5]]], [:@int, "1", [9, 0]]]
+        raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 3 || node.length == 4
 
         # 'if'/'else'/'elsif' bodies
         bodies = args[:bodies].nil? ? [] : args[:bodies]

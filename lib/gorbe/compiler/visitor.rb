@@ -68,7 +68,7 @@ module Gorbe
       end
 
       def visit_general(node)
-        raise CompileError.new(node, "AST node '#{node[0]}' is currently not supported yet. " +
+        raise CompileError.new(node, msg: "AST node '#{node[0]}' is currently not supported yet. " +
                                'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
       end
     end
