@@ -14,7 +14,7 @@ class StatementVisitorTest < Minitest::Test
 
   def test_visit_program_negative
     node = [:program]
-    @stmt_visitor.stub(:log_activity, nil) do
+    @stmt_visitor.stub(:trace_activity, nil) do
       @stmt_visitor.stub(:visit, 1) do
         e = assert_raises(Gorbe::Compiler::CompileError) do
           @stmt_visitor.visit_program(node)
@@ -26,7 +26,7 @@ class StatementVisitorTest < Minitest::Test
 
   def test_visit_assign_positive
     node = [:assign, [:var_field, [:@ident, 'foo', [1, 0]]], [:@int, '1', [1, 6]]]
-    @stmt_visitor.stub(:log_activity, nil) do
+    @stmt_visitor.stub(:trace_activity, nil) do
       visit_mock = MiniTest::Mock.new
       visit_mock.expect(:call, Gorbe::Compiler::Literal.new('πg.NewInt(1).ToObject()'), [node[2]])
       visit_mock.expect(:call, 'foo', [node[1]])
@@ -45,7 +45,7 @@ class StatementVisitorTest < Minitest::Test
 
   def test_visit_assign_negative
     node = [:assign, [:var_field, [:@ident, 'foo', [1, 0]]]]
-    @stmt_visitor.stub(:log_activity, nil) do
+    @stmt_visitor.stub(:trace_activity, nil) do
       visit_mock = MiniTest::Mock.new
       visit_mock.expect(:call, 'foo', [node[1]])
       visit_mock.expect(:call, '1', [node[2]])
@@ -66,7 +66,7 @@ class StatementVisitorTest < Minitest::Test
 
   def test_visit_ident_positive
     node = [:@ident, 'foo', [1, 0]]
-    @stmt_visitor.stub(:log_activity, nil) do
+    @stmt_visitor.stub(:trace_activity, nil) do
       result = @stmt_visitor.visit_ident(node)
       assert(result == 'foo')
     end
@@ -74,7 +74,7 @@ class StatementVisitorTest < Minitest::Test
 
   def test_visit_ident_negative
     node = [:@ident, 'foo']
-    @stmt_visitor.stub(:log_activity, nil) do
+    @stmt_visitor.stub(:trace_activity, nil) do
       e = assert_raises(Gorbe::Compiler::CompileError) do
         @stmt_visitor.visit_ident(node)
       end
@@ -84,7 +84,7 @@ class StatementVisitorTest < Minitest::Test
 
   def test_visit_var_field_positive
     node = [:var_field, [:@ident, 'foo', [1, 0]]]
-    @stmt_visitor.stub(:log_activity, nil) do
+    @stmt_visitor.stub(:trace_activity, nil) do
       visit_ident_mock = MiniTest::Mock.new
       visit_ident_mock.expect(:call, 'foo', [node[1]])
 
@@ -97,7 +97,7 @@ class StatementVisitorTest < Minitest::Test
 
   def test_visit_var_field_negative
     node = [:var_field, [:@ident, 'foo', [1, 0]], []]
-    @stmt_visitor.stub(:log_activity, nil) do
+    @stmt_visitor.stub(:trace_activity, nil) do
       visit_ident_mock = MiniTest::Mock.new
       visit_ident_mock.expect(:call, 'foo', [node[1]])
 
@@ -112,7 +112,7 @@ class StatementVisitorTest < Minitest::Test
 
   def test_visit_void_stmt
     node = [:void_stmt]
-    @stmt_visitor.stub(:log_activity, nil) do
+    @stmt_visitor.stub(:trace_activity, nil) do
       result = @stmt_visitor.visit_void_stmt(node)
       assert_nil(result)
     end

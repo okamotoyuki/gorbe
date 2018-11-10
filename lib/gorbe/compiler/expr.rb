@@ -94,7 +94,7 @@ module Gorbe
       end
 
       def visit_binary(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:binary, [:@int, "1", [1, 0]], :+, [:@int, "1", [1, 4]]]
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
@@ -119,7 +119,7 @@ module Gorbe
       end
 
       def visit_unary(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:unary, :-@, [:@int, "123", [1, 1]]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
@@ -146,7 +146,7 @@ module Gorbe
       end
 
       def visit_var_ref(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:var_ref, [:@kw, "true", [1, 0]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
@@ -158,7 +158,7 @@ module Gorbe
       end
 
       def visit_kw(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:@kw, "true", [1, 0]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
@@ -167,7 +167,7 @@ module Gorbe
       end
 
       def visit_num(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:@int, "1", [1, 0]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
@@ -188,7 +188,7 @@ module Gorbe
       end
 
       def visit_string_literal(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:string_literal, [:string_content, [:@tstring_content, "this is a string expression\\n", [1, 1]]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
@@ -199,7 +199,7 @@ module Gorbe
       end
 
       def visit_string_content(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:string_content, [:@tstring_content, "this is a string expression\\n", [1, 1]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
@@ -208,7 +208,7 @@ module Gorbe
       end
 
       def visit_tstring_content(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:@tstring_content, "this is a string expression\\n", [1, 1]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
@@ -219,7 +219,7 @@ module Gorbe
       end
 
       def visit_array(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:array, [[:@int, "1", [1, 1]], [:@int, "2", [1, 4]], [:@int, "3", [1, 7]]]
         raise CompileError.new(node, msg: 'Node size must be more than 1.') unless node.length > 1
@@ -244,7 +244,7 @@ module Gorbe
       end
 
       def visit_hash(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:hash, [:assoclist_from_args, [[:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
@@ -261,7 +261,7 @@ module Gorbe
       end
 
       def visit_assoclist_from_args(node, lazy_eval_node=nil, **args)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:assoclist_from_args, [[:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]]]
         raise CompileError.new(node, msg: 'Node must have Array.') unless node[1].is_a?(Array)
@@ -272,7 +272,7 @@ module Gorbe
       end
 
       def visit_assoc_new(node, lazy_eval_node=nil, **args)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3

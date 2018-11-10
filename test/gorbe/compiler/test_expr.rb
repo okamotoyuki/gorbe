@@ -17,7 +17,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_binary_positive
     node = [:binary, [:@int, '1', [1, 0]], :+, [:@int, '1', [1, 4]]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       visit_mock = MiniTest::Mock.new
       visit_mock.expect(:call, Gorbe::Compiler::Literal.new(node[1][1]), [node[1]])
       visit_mock.expect(:call, Gorbe::Compiler::Literal.new(node[3][1]), [node[3]])
@@ -31,7 +31,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_binary_negative
     node = [:binary, [:@int, '1', [1, 0]], :foo, [:@int, '1', [1, 4]]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       visit_mock = MiniTest::Mock.new
       visit_mock.expect(:call, Gorbe::Compiler::Literal.new(node[1][1]), [node[1]])
       visit_mock.expect(:call, Gorbe::Compiler::Literal.new(node[3][1]), [node[3]])
@@ -49,7 +49,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_unary_positive
     node = [:unary, :-@, [:@int, '123', [1, 1]]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       visit_mock = MiniTest::Mock.new
       visit_mock.expect(:call, Gorbe::Compiler::Literal.new(node[2][1]), [node[2]])
 
@@ -62,7 +62,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_unary_negative
     node = [:unary, :foo, [:@int, '123', [1, 1]]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       visit_mock = MiniTest::Mock.new
       visit_mock.expect(:call, Gorbe::Compiler::Literal.new(node[2][1]), [node[2]])
 
@@ -79,7 +79,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_var_ref_positive
     node = [:var_ref, [:@kw, 'true', [1, 0]]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       visit_mock = MiniTest::Mock.new
       visit_mock.expect(:call, node[1][1], [node[1]])
 
@@ -98,7 +98,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_var_ref_negative
     node = [:var_ref, [:@kw, nil, [1, 0]]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       visit_mock = MiniTest::Mock.new
       visit_mock.expect(:call, node[1][1], [node[1]])
 
@@ -119,7 +119,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_num_positive
     node = [:@int, '1', [1, 0]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       result = @expr_visitor.visit_num(node)
       assert_equal("πg.NewInt(#{node[1]}).ToObject()", result.expr)
     end
@@ -127,7 +127,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_num_negative
     node = [:@int, 'a', [1, 0]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       e = assert_raises(ArgumentError) do
         @expr_visitor.visit_num(node)
       end
@@ -137,7 +137,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_tstring_content
     node = [:@tstring_content, 'this is a string expression\\n', [1, 1]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       result = @expr_visitor.visit_tstring_content(node)
       assert_equal('πg.NewStr("this is a string expression\\n").ToObject()', result.expr)
     end
@@ -145,7 +145,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_tstring_negative
     node = [:@tstring_content, [], [1, 1]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       e = assert_raises(TypeError) do
         @expr_visitor.visit_tstring_content(node)
       end
@@ -155,7 +155,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_array_positive
     node = [:array, [[:@int, '1', [1, 1]], [:@int, '2', [1, 4]], [:@int, '3', [1, 7]]]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       visit_sequential_elements_mock = MiniTest::Mock.new
       visit_sequential_elements_mock
           .expect(:call, Gorbe::Compiler::TempVar.new(block: @expr_visitor.block, name: 'πTemp001', type: '[]*πg.Object'), [Array])
@@ -169,7 +169,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_array_negative
     node = [:array, 1, [:@int, '2', [1, 4]], [:@int, '3', [1, 7]]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       visit_sequential_elements_mock = MiniTest::Mock.new
       visit_sequential_elements_mock
           .expect(:call, Gorbe::Compiler::TempVar.new(block: @expr_visitor.block, name: 'πTemp001', type: '[]*πg.Object'), [Array])
@@ -185,7 +185,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_hash_positive
     node = [:hash, [:assoclist_from_args, [[:assoc_new, [:@int, '1', [1, 2]], [:@int, '2', [1, 7]]]]]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       visit_mock = MiniTest::Mock.new
       visit_mock.expect(:call, nil, [node[1], Hash])
 
@@ -198,7 +198,7 @@ class ExprVisitorTest < Minitest::Test
 
   def test_visit_hash_negative
     node = [:hash, [:assoclist_from_args, [[:assoc_new, [:@int, '1', [1, 2]], [:@int, '2', [1, 7]]]]], [:assoclist_from_args]]
-    @expr_visitor.stub(:log_activity, nil) do
+    @expr_visitor.stub(:trace_activity, nil) do
       visit_mock = MiniTest::Mock.new
       visit_mock.expect(:call, nil, [node[1], Hash])
 

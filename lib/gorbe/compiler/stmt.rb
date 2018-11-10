@@ -36,7 +36,7 @@ module Gorbe
       end
 
       def visit_program(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:program, [[:void_stmt]]]
         raise CompileError.new(node, msg: 'Node size must be more than 1.') unless node.length > 1
@@ -48,7 +48,7 @@ module Gorbe
       end
 
       def visit_assign(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:assign, [:var_field, [:@ident, "foo", [1, 0]]], [:@int, "1", [1, 6]]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
@@ -60,12 +60,12 @@ module Gorbe
       end
 
       def visit_expr(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
         return @expr_visitor.visit(node)
       end
 
       def visit_ident(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:@ident, "foo", [1, 0]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
@@ -74,7 +74,7 @@ module Gorbe
       end
 
       def visit_var_field(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:var_field, [:@ident, "foo", [1, 0]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
@@ -103,7 +103,7 @@ module Gorbe
       end
 
       def visit_case(node)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:case, $expr, [:when, ...]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
@@ -113,7 +113,7 @@ module Gorbe
       end
 
       def visit_when(node, lazy_eval_node=nil, **args)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:when, $expr, [$expr, $expr...], [:else, ...]]
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
@@ -164,7 +164,7 @@ module Gorbe
       end
 
       def visit_if_or_unless(node, lazy_eval_node=nil, **args)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:if, $cond_expr, [$expr, $expr...], [:elsif, $cond_expr, [$expr, $expr...], [:else, [$expr, $expr]]]
         #      [:if_mod, $cond_expr, $expr]
@@ -176,7 +176,7 @@ module Gorbe
       end
 
       def visit_else(node, lazy_eval_node=nil, **args)
-        log_activity(__method__.to_s)
+        trace_activity(__method__.to_s)
 
         # e.g. [:else, [$expr, $expr...]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
