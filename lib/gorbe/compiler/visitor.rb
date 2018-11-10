@@ -40,24 +40,24 @@ module Gorbe
       end
 
       # Traverse Ruby AST
-      def visit(ast, **args)
+      def visit(node, lazy_eval_node=nil, **args)
         @depth += 1
         result = nil # Return value
 
-        if ast.empty?
+        if node.empty?
           Gorbe.logger.debug('  ' * (depth - 1) + '(empty)')
           @depth -= 1
           return result
         end
 
-        if ast[0].is_a?(Symbol) || ast[0].is_a?(String) # TODO : Should we actually consider "String" type?
+        if node[0].is_a?(Symbol) || node[0].is_a?(String) # TODO : Should we actually consider "String" type?
           nodetype =
-            @nodetype_map.key?(ast[0]) ? @nodetype_map[ast[0]] : 'general'
+            @nodetype_map.key?(node[0]) ? @nodetype_map[node[0]] : 'general'
           result =
-            args.empty? ? send("visit_#{nodetype}", ast) : send("visit_#{nodetype}", ast, **args)
-        elsif ast[0].is_a?(Array)
-          ast.each do |node|
-            result = visit(node)
+            lazy_eval_node.nil? && args.empty? ? send("visit_#{nodetype}", node) : send("visit_#{nodetype}", node, lazy_eval_node, **args)
+        elsif node[0].is_a?(Array)
+          node.each do |single_node|
+            result = visit(single_node)
           end
         else
           raise CompileError.new(ast, msg: 'Not supported AST node.')
@@ -67,7 +67,7 @@ module Gorbe
         return result
       end
 
-      def visit_general(node)
+      def visit_general(node, lazy_eval_node=nil, **args)
         raise CompileError.new(node, msg: "AST node '#{node[0]}' is currently not supported yet. " +
                                'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
       end

@@ -23,6 +23,7 @@ module Gorbe
                 var_ref: 'expr',
                 string_literal: 'expr',
                 case: 'case',
+                when: 'when',
                 if: 'if_or_unless',
                 if_mod: 'if_or_unless',
                 elsif: 'if_or_unless',
@@ -85,25 +86,47 @@ module Gorbe
         # Do nothing
       end
 
-      # def visit_case(node)
-      #   log_activity(__method__.to_s)
-      #
-      #   # e.g. [:case, [:var_ref, [:@ident, "foo", [3, 5]]],
-      #   #       [:when, [[:@int, "1", [4, 5]]], [[:@int, "2", [5, 1]]],
-      #   #       [:else, [[:@int, "3", [7, 1]]]]]]
-      #   raise CompileError.new(node, msg: 'Node size must be more than 2.') unless node.length > 2
-      #
-      #   with(target: visit(node[1])) do |temps|
-      #     node[2..node.length-1].each do |node|
-      #
-      #     end
-      #   end
-      # end
+      # TODO : This logic might be slow and need to be improved.
+      private def generate_when_condition_node(target_expr_node, val_expr_nodes)
+        # e.g. [:binary,
+        #         [:binary, target_expr_node, :===, val_expr_node_1],
+        #         :"||",
+        #         [:binary, target_expr_node, :===, val_expr_node_2]
+        #      ]
+        condition_node = nil
+        val_expr_nodes.each do |val_expr_node|
+          single_condition_node = [:binary, target_expr_node, :===, val_expr_node]
+          condition_node =
+              condition_node.nil? ? single_condition_node : [:binary, condition_node, :"||", single_condition_node]
+        end
+        return condition_node
+      end
 
-      private def visit_branch(node, bodies, branch_type, branch_condition, branch_body, next_branch_body=nil)
+      def visit_case(node)
+        log_activity(__method__.to_s)
+
+        # e.g. [:case, $expr, [:when, ...]]
+        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        bodies = [] # Branch bodies
+        visit(node[2], node[1], bodies: bodies)
+      end
+
+      def visit_when(node, lazy_eval_node=nil, **args)
+        log_activity(__method__.to_s)
+
+        # e.g. [:when, $expr, [$expr, $expr...], [:else, ...]]
+        raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
+
+        bodies = args[:bodies]
+        condition_node = generate_when_condition_node(lazy_eval_node, node[1])
+        visit_branch(node, bodies, node[0], condition_node, node[2], node[3], lazy_eval_node)
+      end
+
+      private def visit_branch(node, bodies, branch_type, condition_node, body_node, next_branch_node=nil, lazy_eval_node=nil)
         # Check if '!' is needed for the condition depending on the branch type
         case branch_type
-        when :if, :elsif, :if_mod then
+        when :if, :elsif, :if_mod, :when then
           is_not = false
         when :unless, :unless_mod then
           is_not = true
@@ -112,20 +135,20 @@ module Gorbe
         end
 
         label = @block.gen_label
-        with(is_true: @block.alloc_temp('bool')) do |bool_temps|
+        with(condition: visit(condition_node), is_true: @block.alloc_temp('bool')) do |temps|
           template = <<~EOS
-            if #{bool_temps[:is_true].expr}, πE = πg.IsTrue(πF, #{branch_condition.expr}); πE != nil {
+            if #{temps[:is_true].expr}, πE = πg.IsTrue(πF, #{temps[:condition].expr}); πE != nil {
             \tcontinue
             }
-            if #{is_not ? '!' : ''}#{bool_temps[:is_true].expr} {
+            if #{is_not ? '!' : ''}#{temps[:is_true].expr} {
             \tgoto Label#{label}
             }
           EOS
           @writer.write(template)
         end
-        bodies.push([label, branch_body])
+        bodies.push([label, body_node])
 
-        if next_branch_body.nil?  # If there is no 'else' statement
+        if next_branch_node.nil?  # If there is no 'else' statement
           end_label = @block.gen_label
 
           # Write labels and bodies
@@ -135,39 +158,33 @@ module Gorbe
             @writer.write("goto Label%d" % end_label)
           end
           @writer.write_label(end_label)
-        else  # If there is 'elsif' or 'else' statement
-          visit(next_branch_body, bodies: bodies)
+        else  # If there is 'elsif', 'else' or 'when' statement
+          visit(next_branch_node, lazy_eval_node, bodies: bodies)
         end
       end
 
-      def visit_if_or_unless(node, **args)
+      def visit_if_or_unless(node, lazy_eval_node=nil, **args)
         log_activity(__method__.to_s)
 
-        # e.g. [:if, [:var_ref, [:@kw, "true", [1, 3]]], [[:@int, "1", [2, 2]]],
-        #       [:elsif, [:var_ref, [:@kw, "false", [3, 6]]], [[:@int, "2", [4, 2]]],
-        #       [:else, [[:@int, "3", [6, 2]]]]]]
-        #
-        #      [:if_mod, [:var_ref, [:@kw, "true", [9, 5]]], [:@int, "1", [9, 0]]]
+        # e.g. [:if, $cond_expr, [$expr, $expr...], [:elsif, $cond_expr, [$expr, $expr...], [:else, [$expr, $expr]]]
+        #      [:if_mod, $cond_expr, $expr]
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 3 || node.length == 4
 
-        # Branch bodies
-        bodies = args[:bodies].nil? ? [] : args[:bodies]
+        bodies = args[:bodies].nil? ? [] : args[:bodies]  # Branch bodies
 
-        with(cond: visit(node[1])) do |temps|
-          visit_branch(node, bodies, node[0], temps[:cond], node[2], node[3])
-        end
+        visit_branch(node, bodies, node[0], node[1], node[2], node[3])
       end
 
-      def visit_else(node, **args)
+      def visit_else(node, lazy_eval_node=nil, **args)
         log_activity(__method__.to_s)
 
-        # e.g. [:else, [[:@int, "3", [6, 2]]]]
+        # e.g. [:else, [$expr, $expr...]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
-        # 'if'/'else'/'elsif' bodies
-        bodies = args[:bodies]
+        bodies = args[:bodies]  # 'if'/'else'/'elsif' bodies
         default_label = @block.gen_label
         bodies.push([default_label, node[1]])
+        @writer.write("goto Label%d" % default_label)
         end_label = @block.gen_label
 
         # Write labels and bodies

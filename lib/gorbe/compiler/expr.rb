@@ -48,8 +48,8 @@ module Gorbe
     class ExprVisitor < Visitor
 
       BIN_OP_TEMPLATES = {
-          :& => lambda { |lhs, rhs| "πg.And(πF, #{lhs}, #{rhs})" },
-          :| => lambda { |lhs, rhs| "πg.Or(πF, #{lhs}, #{rhs})" },
+          :"&&" => lambda { |lhs, rhs| "πg.And(πF, #{lhs}, #{rhs})" },
+          :"||" => lambda { |lhs, rhs| "πg.Or(πF, #{lhs}, #{rhs})" },
           :^ => lambda { |lhs, rhs| "πg.Xor(πF, #{lhs}, #{rhs})" },
           :+ => lambda { |lhs, rhs| "πg.Add(πF, #{lhs}, #{rhs})" },
           :/ => lambda { |lhs, rhs| "πg.Div(πF, #{lhs}, #{rhs})" },
@@ -67,7 +67,6 @@ module Gorbe
           :<= => lambda { |lhs, rhs| "πg.LE(πF, #{lhs}, #{rhs})" },
           :!= => lambda { |lhs, rhs| "πg.NE(πF, #{lhs}, #{rhs})" }
       }
-
 
       UNARY_OP_TEMPLATES = {
           :~ => lambda { |operand| "πg.Invert(πF, #{operand})" },
@@ -99,7 +98,6 @@ module Gorbe
 
         # e.g. [:binary, [:@int, "1", [1, 0]], :+, [:@int, "1", [1, 4]]]
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
-
         lhs = visit(node[1])&.expr
         operator = node[2]
         rhs = visit(node[3])&.expr
@@ -110,6 +108,8 @@ module Gorbe
         if BIN_OP_TEMPLATES.has_key?(operator) then
           call = BIN_OP_TEMPLATES[operator].call(lhs, rhs)
           @writer.write_checked_call2(result, call)
+        elsif operator === :=== then
+          @writer.write("#{result.name} = πg.GetBool(#{lhs} == #{rhs}).ToObject()")
         else
           raise CompileError.new(node, msg: "The operator '#{operator}' is not supported. " +
               'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
@@ -133,7 +133,7 @@ module Gorbe
         if UNARY_OP_TEMPLATES.has_key?(operator) then
           call = UNARY_OP_TEMPLATES[operator].call(operand)
           @writer.write_checked_call2(result, call)
-        elsif operator == :not
+        elsif operator === :not
           is_true = @block.alloc_temp('bool')
           @writer.write_checked_call2(is_true, "πg.IsTrue(πF, #{operand})")
           @writer.write("#{result.name} = πg.GetBool(!#{is_true.expr}).ToObject()")
@@ -260,7 +260,7 @@ module Gorbe
         return result
       end
 
-      def visit_assoclist_from_args(node, **args)
+      def visit_assoclist_from_args(node, lazy_eval_node=nil, **args)
         log_activity(__method__.to_s)
 
         # e.g. [:assoclist_from_args, [[:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]]]
@@ -271,7 +271,7 @@ module Gorbe
         end
       end
 
-      def visit_assoc_new(node, **args)
+      def visit_assoc_new(node, lazy_eval_node=nil, **args)
         log_activity(__method__.to_s)
 
         # e.g. [:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]
