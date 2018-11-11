@@ -78,6 +78,7 @@ module Gorbe
       end
 
       def bind_var(writer, name, value)
+        # TODO : Change it to call write_checked_call2() instead as assignment returns value in Ruby
         writer.write_checked_call1("πF.Globals().SetItem(πF, #{intern(name)}.ToObject(), #{value})")
       end
 

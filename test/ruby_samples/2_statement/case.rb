@@ -1,4 +1,5 @@
-case 1
+foo = 1
+case foo
 when 1 then
 	1
 when 2 then

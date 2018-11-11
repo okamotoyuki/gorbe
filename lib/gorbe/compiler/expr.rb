@@ -77,11 +77,14 @@ module Gorbe
         super(block: stmt_visitor.block, parent: stmt_visitor, writer:  stmt_visitor.writer, nodetype_map:
             {
                 array: 'array',
+                assign: 'assign',
                 assoclist_from_args: 'assoclist_from_args',
                 assoc_new: 'assoc_new',
                 binary: 'binary',
                 hash: 'hash',
+                '@ident': 'ident',
                 unary: 'unary',
+                var_field: 'var_field',
                 var_ref: 'var_ref',
                 string_literal: 'string_literal',
                 string_content: 'string_content',
@@ -280,6 +283,36 @@ module Gorbe
         with(key: visit(node[1]), value: visit(node[2])) do |temps|
           @writer.write_checked_call1("#{args[:hash].expr}.SetItem(πF, #{temps[:key].expr}, #{temps[:value].expr})")
         end
+      end
+
+      def visit_assign(node)
+        trace_activity(__method__.to_s)
+
+        # e.g. [:assign, [:var_field, [:@ident, "foo", [1, 0]]], [:@int, "1", [1, 6]]]
+        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        with(value: visit(node[2])) do |temps|
+          target = visit(node[1])
+          @block.bind_var(@writer, target, temps[:value].expr)
+        end
+      end
+
+      def visit_ident(node)
+        trace_activity(__method__.to_s)
+
+        # e.g. [:@ident, "foo", [1, 0]]
+        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        return node[1]
+      end
+
+      def visit_var_field(node)
+        trace_activity(__method__.to_s)
+
+        # e.g. [:var_field, [:@ident, "foo", [1, 0]]]
+        raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
+
+        return visit(node[1])
       end
     end
 

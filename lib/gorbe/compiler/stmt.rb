@@ -10,16 +10,16 @@ module Gorbe
         super(block: block, writer: Writer.new, nodetype_map:
             {
                 array: 'expr',
-                assign: 'assign',
+                assign: 'expr',
                 hash: 'expr',
                 program: 'program',
                 void_stmt: 'void_stmt',
                 binary: 'expr',
                 unary: 'expr',
-                '@ident': 'ident',
+                '@ident': 'expr',
                 '@int': 'expr',
                 '@float': 'expr',
-                var_field: 'var_field',
+                var_field: 'expr',
                 var_ref: 'expr',
                 string_literal: 'expr',
                 case: 'case',
@@ -47,39 +47,9 @@ module Gorbe
         end
       end
 
-      def visit_assign(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:assign, [:var_field, [:@ident, "foo", [1, 0]]], [:@int, "1", [1, 6]]]
-        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
-
-        with(value: visit(node[2])) do |temps|
-          target = visit(node[1])
-          @block.bind_var(@writer, target, temps[:value].expr)
-        end
-      end
-
       def visit_expr(node)
         trace_activity(__method__.to_s)
         return @expr_visitor.visit(node)
-      end
-
-      def visit_ident(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:@ident, "foo", [1, 0]]
-        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
-
-        return node[1]
-      end
-
-      def visit_var_field(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:var_field, [:@ident, "foo", [1, 0]]]
-        raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
-
-        return visit(node[1])
       end
 
       def visit_void_stmt(node)
