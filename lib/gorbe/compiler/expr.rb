@@ -44,6 +44,8 @@ module Gorbe
 
     end
 
+    NIL_EXPR = Literal.new('nil')
+
     # A class which generates Go code based on Ruby AST (Expression).
     class ExprVisitor < Visitor
 
@@ -91,7 +93,11 @@ module Gorbe
                 '@int': 'num',
                 '@float': 'num',
                 '@kw': 'kw',
-                '@tstring_content': 'tstring_content'
+                '@tstring_content': 'tstring_content',
+                method_add_arg: 'method_add_arg',
+                fcall: 'fcall',
+                arg_paren: 'arg_paren',
+                args_add_block: 'args_add_block'
             }
         )
       end
@@ -313,6 +319,72 @@ module Gorbe
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         return visit(node[1])
+      end
+
+      def visit_method_add_arg(node)
+        trace_activity(__method__.to_s)
+
+        # e.g. [:method_add_arg,
+        #       [:fcall, [:@ident, "puts", [1, 0]]],
+        #       [:arg_paren, [:args_add_block, [[:@int, "1", [1, 5]]], false]]]
+        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        arg_info = visit(node[2])
+        argc = arg_info[:argc]
+        argv = arg_info[:argv]
+        result = nil
+
+        with(args: argv, func: visit(node[1])) do |temps|
+          result = @block.alloc_temp
+          @writer.write_checked_call2(result, "#{temps[:func].expr}.Call(πF, #{temps[:args].expr}, #{NIL_EXPR.expr})")
+        end
+
+        if argc > 0
+          @writer.write("πF.FreeArgs(#{argv.expr})")
+        end
+
+        return result
+      end
+
+      def visit_fcall(node)
+        trace_activity(__method__.to_s)
+
+        # e.g. [:fcall, [:@ident, "puts", [1, 0]]],
+        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 2
+
+        return @block.resolve_name(@writer, visit(node[1]))
+      end
+
+      def visit_arg_paren(node)
+        trace_activity(__method__.to_s)
+
+        # e.g. [:arg_paren, [:args_add_block, [[:@int, "1", [1, 5]]], false]]]
+        raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
+
+        return visit(node[1])
+      end
+
+      def visit_args_add_block(node)
+        trace_activity(__method__.to_s)
+
+        # e.g. [:args_add_block, [[:@int, "1", [1, 5]]], false]]
+        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        # Build positional arguments.
+        argc = node[1].length
+        argv = NIL_EXPR
+
+        unless node[1].empty?
+          argv = self.block.alloc_temp('[]*πg.Object')
+          @writer.write("#{argv.expr} = πF.MakeArgs(#{argc})")
+          node[1].each_with_index do |node, i|
+            with(arg: visit(node)) do |temps|
+              @writer.write("#{argv.expr}[#{i}] = #{temps[:arg].expr}")
+            end
+          end
+        end
+
+        return { argc: argc, argv: argv }
       end
     end
 

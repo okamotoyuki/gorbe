@@ -7,6 +7,7 @@ require 'gorbe/compiler/util'
 
 require 'ripper'
 require 'logger'
+require 'pp'
 
 # A module for transpiling Ruby code to Go code
 module Gorbe
@@ -32,7 +33,12 @@ module Gorbe
     def compile(input=STDIN, output=STDOUT)
       # Ruby code -> Ruby AST
       ast = Ripper.sexp(input.read)
-      Gorbe.logger.debug(ast)
+      if Gorbe::logger.level === Logger::DEBUG
+        puts('=============== Ruby AST ===============')
+        PP.pp(ast, STDERR)
+        puts('========================================')
+        puts()
+      end
 
       # Ruby AST -> Go code
       return generate_go_code(ast, output)

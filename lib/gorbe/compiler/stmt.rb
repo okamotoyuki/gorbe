@@ -29,7 +29,11 @@ module Gorbe
                 elsif: 'if_or_unless',
                 unless: 'if_or_unless',
                 unless_mod: 'if_or_unless',
-                else: 'else'
+                else: 'else',
+                method_add_arg: 'expr',
+                fcall: 'expr',
+                arg_paren: 'expr',
+                args_add_block: 'expr'
             }
         )
         @expr_visitor = Compiler::ExprVisitor.new(self)
