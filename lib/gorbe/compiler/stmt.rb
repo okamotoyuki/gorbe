@@ -83,21 +83,22 @@ module Gorbe
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         bodies = [] # Branch bodies
-        visit(node[2], node[1], bodies: bodies)
+        visit_typed_node(node[2], :when, bodies: bodies, target_expr_node: node[1])
       end
 
-      def visit_when(node, lazy_eval_node=nil, **args)
+      def visit_when(node, **args)
         trace_activity(__method__.to_s)
 
         # e.g. [:when, $expr, [$expr, $expr...], [:else, ...]]
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
 
         bodies = args[:bodies]
-        condition_node = generate_when_condition_node(lazy_eval_node, node[1])
-        visit_branch(node, bodies, node[0], condition_node, node[2], node[3], lazy_eval_node)
+        target_expr_node = args[:target_expr_node]
+        condition_node = generate_when_condition_node(target_expr_node, node[1])
+        visit_branch(node, bodies, node[0], condition_node, node[2], node[3], target_expr_node: target_expr_node)
       end
 
-      private def visit_branch(node, bodies, branch_type, condition_node, body_node, next_branch_node=nil, lazy_eval_node=nil)
+      private def visit_branch(node, bodies, branch_type, condition_node, body_node, next_branch_node=nil, **args)
         # Check if '!' is needed for the condition depending on the branch type
         case branch_type
         when :if, :elsif, :if_mod, :when then
@@ -133,11 +134,19 @@ module Gorbe
           end
           @writer.write_label(end_label)
         else  # If there is 'elsif', 'else' or 'when' statement
-          visit(next_branch_node, lazy_eval_node, bodies: bodies)
+          case next_branch_node[0]
+          when :when then
+            visit_typed_node(next_branch_node, :when, bodies: bodies, target_expr_node: args[:target_expr_node])
+          when :elsif, :else then
+            visit_typed_node(next_branch_node, next_branch_node[0], bodies: bodies)
+          else
+            raise CompileError.new(node, msg: "'#{next_branch_node[0]}' is unexpected branch type in this context. " +
+                               'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
+          end
         end
       end
 
-      def visit_if_or_unless(node, lazy_eval_node=nil, **args)
+      def visit_if_or_unless(node, **args)
         trace_activity(__method__.to_s)
 
         # e.g. [:if, $cond_expr, [$expr, $expr...], [:elsif, $cond_expr, [$expr, $expr...], [:else, [$expr, $expr]]]
@@ -149,7 +158,7 @@ module Gorbe
         visit_branch(node, bodies, node[0], node[1], node[2], node[3])
       end
 
-      def visit_else(node, lazy_eval_node=nil, **args)
+      def visit_else(node, **args)
         trace_activity(__method__.to_s)
 
         # e.g. [:else, [$expr, $expr...]]

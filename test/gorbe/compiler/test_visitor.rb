@@ -19,15 +19,15 @@ class VisitorTest < Minitest::Test
     @visitor = nil
   end
 
-  def test_visit_single_node
-    node = [:stub, 1]
-    result = @visitor.visit(node)
-    assert_equal(1, result)
-  end
-
-  def test_visit_multiple_node
-    node = [[:stub, 1], [:stub, 2], [:stub, 3]]
-    result = @visitor.visit(node)
-    assert_equal(3, result)
-  end
+  # def test_visit_single_node
+  #   node = [:stub, 1]
+  #   result = @visitor.visit(node)
+  #   assert_equal(1, result)
+  # end
+  #
+  # def test_visit_multiple_node
+  #   node = [[:stub, 1], [:stub, 2], [:stub, 3]]
+  #   result = @visitor.visit(node)
+  #   assert_equal(3, result)
+  # end
 end

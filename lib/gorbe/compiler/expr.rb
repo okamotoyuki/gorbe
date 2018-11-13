@@ -160,10 +160,17 @@ module Gorbe
         # e.g. [:var_ref, [:@kw, "true", [1, 0]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
-        kw = visit(node[1])
-        raise CompileError.new(node, msg: 'Keyword mult not be nil.') if kw.nil?
+        var_node = node[1]
+        case var_node[0]
+        when '@kw'.to_sym, '@ident'.to_sym then
+          var = visit_typed_node(var_node, var_node[0])
+        else
+          raise CompileError.new(node, msg: "'#{var_node[0]}' is unexpected branch type in this context. " +
+              'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
+        end
+        raise CompileError.new(node, msg: 'Keyword mult not be nil.') if var.nil?
 
-        return @block.resolve_name(@writer, kw)
+        return @block.resolve_name(@writer, var)
       end
 
       def visit_kw(node)
@@ -204,7 +211,7 @@ module Gorbe
 
         # TODO : Check if the string is unicode and generate 'πg.NewUnicode({}).ToObject()'
 
-        return visit(node[1])
+        return visit_typed_node(node[1], :string_content)
       end
 
       def visit_string_content(node)
@@ -213,7 +220,7 @@ module Gorbe
         # e.g. [:string_content, [:@tstring_content, "this is a string expression\\n", [1, 1]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
-        return visit(node[1])
+        return visit_typed_node(node[1], '@tstring_content'.to_sym)
       end
 
       def visit_tstring_content(node)
@@ -261,7 +268,7 @@ module Gorbe
         result = nil
         with(hash: @block.alloc_temp('*πg.Dict')) do |temps|
           @writer.write("#{temps[:hash].name} = πg.NewDict()")
-          visit(node[1], hash: temps[:hash])
+          visit_typed_node(node[1], :assoclist_from_args, hash: temps[:hash])
           result = @block.alloc_temp
           @writer.write("#{result.name} = #{temps[:hash].expr}.ToObject()")
         end
@@ -269,18 +276,18 @@ module Gorbe
         return result
       end
 
-      def visit_assoclist_from_args(node, lazy_eval_node=nil, **args)
+      def visit_assoclist_from_args(node, **args)
         trace_activity(__method__.to_s)
 
         # e.g. [:assoclist_from_args, [[:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]]]
         raise CompileError.new(node, msg: 'Node must have Array.') unless node[1].is_a?(Array)
 
         node[1].each do |assoc_new_node|
-          visit(assoc_new_node, **args)
+          visit_typed_node(assoc_new_node, :assoc_new, **args)
         end
       end
 
-      def visit_assoc_new(node, lazy_eval_node=nil, **args)
+      def visit_assoc_new(node, **args)
         trace_activity(__method__.to_s)
 
         # e.g. [:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]
@@ -298,7 +305,7 @@ module Gorbe
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         with(value: visit(node[2])) do |temps|
-          target = visit(node[1])
+          target = visit_typed_node(node[1], :var_field)
           @block.bind_var(@writer, target, temps[:value].expr)
         end
       end
@@ -318,7 +325,7 @@ module Gorbe
         # e.g. [:var_field, [:@ident, "foo", [1, 0]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
-        return visit(node[1])
+        return visit_typed_node(node[1], '@ident'.to_sym)
       end
 
       def visit_method_add_arg(node)
@@ -329,12 +336,12 @@ module Gorbe
         #       [:arg_paren, [:args_add_block, [[:@int, "1", [1, 5]]], false]]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
-        arg_info = visit(node[2])
+        arg_info = visit_typed_node(node[2], :arg_paren)
         argc = arg_info[:argc]
         argv = arg_info[:argv]
         result = nil
 
-        with(args: argv, func: visit(node[1])) do |temps|
+        with(args: argv, func: visit_typed_node(node[1], :fcall)) do |temps|
           result = @block.alloc_temp
           @writer.write_checked_call2(result, "#{temps[:func].expr}.Call(πF, #{temps[:args].expr}, #{NIL_EXPR.expr})")
         end
@@ -352,7 +359,7 @@ module Gorbe
         # e.g. [:fcall, [:@ident, "puts", [1, 0]]],
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 2
 
-        return @block.resolve_name(@writer, visit(node[1]))
+        return @block.resolve_name(@writer, visit_typed_node(node[1], '@ident'.to_sym))
       end
 
       def visit_arg_paren(node)
@@ -361,7 +368,7 @@ module Gorbe
         # e.g. [:arg_paren, [:args_add_block, [[:@int, "1", [1, 5]]], false]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
-        return visit(node[1])
+        return visit_typed_node(node[1], :args_add_block)
       end
 
       def visit_args_add_block(node)

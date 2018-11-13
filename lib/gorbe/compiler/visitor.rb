@@ -40,7 +40,13 @@ module Gorbe
       end
 
       # Traverse Ruby AST
-      def visit(node, lazy_eval_node=nil, **args)
+      private def _visit(node, nodetype, **args)
+        method_type = @nodetype_map.key?(node[0]) ? @nodetype_map[node[0]] : 'general'
+        return args.empty? ? send("visit_#{method_type}", node) : send("visit_#{method_type}", node, **args)
+      end
+
+      # Visit untyped node
+      def visit(node)
         @depth += 1
         result = nil # Return value
 
@@ -51,23 +57,36 @@ module Gorbe
         end
 
         if node[0].is_a?(Symbol) || node[0].is_a?(String) # TODO : Should we actually consider "String" type?
-          nodetype =
-            @nodetype_map.key?(node[0]) ? @nodetype_map[node[0]] : 'general'
-          result =
-            lazy_eval_node.nil? && args.empty? ? send("visit_#{nodetype}", node) : send("visit_#{nodetype}", node, lazy_eval_node, **args)
+          result = _visit(node, node[0])
         elsif node[0].is_a?(Array)
           node.each do |single_node|
             result = visit(single_node)
           end
         else
-          raise CompileError.new(ast, msg: 'Not supported AST node.')
+          raise CompileError.new(node, msg: 'Not supported AST node.')
         end
 
         @depth -= 1
         return result
       end
 
-      def visit_general(node, lazy_eval_node=nil, **args)
+      # Visit typed node
+      def visit_typed_node(node, nodetype, **args)
+        @depth += 1
+        result = nil # Return value
+
+        unless node[0] === nodetype
+          raise CompileError.new(node, msg: "AST node '#{node[0]}' is unexpected in this context. " +
+                               'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
+        end
+
+        result = _visit(node, nodetype, **args)
+        @depth -= 1
+        return result
+      end
+
+      # Visit unsupported node
+      def visit_general(node, **args)
         raise CompileError.new(node, msg: "AST node '#{node[0]}' is currently not supported yet. " +
                                'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
       end
