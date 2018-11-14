@@ -86,19 +86,17 @@ module Gorbe
         visit_typed_node(node[2], :when, bodies: bodies, target_expr_node: node[1])
       end
 
-      def visit_when(node, **args)
+      def visit_when(node, bodies:, target_expr_node:)
         trace_activity(__method__.to_s)
 
         # e.g. [:when, $expr, [$expr, $expr...], [:else, ...]]
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
 
-        bodies = args[:bodies]
-        target_expr_node = args[:target_expr_node]
         condition_node = generate_when_condition_node(target_expr_node, node[1])
-        visit_branch(node, bodies, node[0], condition_node, node[2], node[3], target_expr_node: target_expr_node)
+        visit_branch(node, bodies, node[0], condition_node, node[2], node[3], target_expr_node)
       end
 
-      private def visit_branch(node, bodies, branch_type, condition_node, body_node, next_branch_node=nil, **args)
+      private def visit_branch(node, bodies, branch_type, condition_node, body_node, next_branch_node, target_expr_node=nil)
         # Check if '!' is needed for the condition depending on the branch type
         case branch_type
         when :if, :elsif, :if_mod, :when then
@@ -136,7 +134,7 @@ module Gorbe
         else  # If there is 'elsif', 'else' or 'when' statement
           case next_branch_node[0]
           when :when then
-            visit_typed_node(next_branch_node, :when, bodies: bodies, target_expr_node: args[:target_expr_node])
+            visit_typed_node(next_branch_node, :when, bodies: bodies, target_expr_node: target_expr_node)
           when :elsif, :else then
             visit_typed_node(next_branch_node, next_branch_node[0], bodies: bodies)
           else
@@ -146,25 +144,22 @@ module Gorbe
         end
       end
 
-      def visit_if_or_unless(node, **args)
+      def visit_if_or_unless(node, bodies: nil)
         trace_activity(__method__.to_s)
 
         # e.g. [:if, $cond_expr, [$expr, $expr...], [:elsif, $cond_expr, [$expr, $expr...], [:else, [$expr, $expr]]]
         #      [:if_mod, $cond_expr, $expr]
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 3 || node.length == 4
 
-        bodies = args[:bodies].nil? ? [] : args[:bodies]  # Branch bodies
-
-        visit_branch(node, bodies, node[0], node[1], node[2], node[3])
+        visit_branch(node, bodies.nil? ? [] : bodies, node[0], node[1], node[2], node[3])
       end
 
-      def visit_else(node, **args)
+      def visit_else(node, bodies:)
         trace_activity(__method__.to_s)
 
         # e.g. [:else, [$expr, $expr...]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
-        bodies = args[:bodies]  # 'if'/'else'/'elsif' bodies
         default_label = @block.gen_label
         bodies.push([default_label, node[1]])
         @writer.write("goto Label%d" % default_label)

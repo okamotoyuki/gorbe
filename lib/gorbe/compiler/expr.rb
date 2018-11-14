@@ -276,25 +276,25 @@ module Gorbe
         return result
       end
 
-      def visit_assoclist_from_args(node, **args)
+      def visit_assoclist_from_args(node, hash:)
         trace_activity(__method__.to_s)
 
         # e.g. [:assoclist_from_args, [[:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]]]
         raise CompileError.new(node, msg: 'Node must have Array.') unless node[1].is_a?(Array)
 
         node[1].each do |assoc_new_node|
-          visit_typed_node(assoc_new_node, :assoc_new, **args)
+          visit_typed_node(assoc_new_node, :assoc_new, hash: hash)
         end
       end
 
-      def visit_assoc_new(node, **args)
+      def visit_assoc_new(node, hash:)
         trace_activity(__method__.to_s)
 
         # e.g. [:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         with(key: visit(node[1]), value: visit(node[2])) do |temps|
-          @writer.write_checked_call1("#{args[:hash].expr}.SetItem(πF, #{temps[:key].expr}, #{temps[:value].expr})")
+          @writer.write_checked_call1("#{hash.expr}.SetItem(πF, #{temps[:key].expr}, #{temps[:value].expr})")
         end
       end
 
