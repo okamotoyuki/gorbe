@@ -41,9 +41,18 @@ $ echo "1 + 1" | ./gorbec
     $ export GOPATH=$PWD/build
     $ export PYTHONPATH=$PWD/build/lib/python2.7/site-packages
     ```
-3. Run
+3. Set paths for gorbe
     ```bash
-    $ echo "1 + 1" | rake run
+    $ cd gorbe
+    $ export GOPATH=$GOPATH:$PWD/go
+    ```
+4. Execute the following command
+    ```bash
+    $ rake init
+    ```
+5. Run
+    ```bash
+    $ echo "p(1 + 1)" | rake run
     ```
     
 ### Run test

@@ -26,6 +26,15 @@ task :compile, :filepath do |task, args|
   compile(args[:filepath], STDOUT)
 end
 
+desc 'Initialize environment'
+task :init do |task, args|
+  ENV['GOPATH'].to_s.split(':').each do |env|
+    if env.end_with?('/grumpy/build')
+      sh "cp go/src/grumpy/export.go #{env}/src/grumpy"
+    end
+  end
+end
+
 desc 'Compile Ruby code to Go code and run it immediately'
 task :run, :filepath do |task, args|
   # Create Go package directory
