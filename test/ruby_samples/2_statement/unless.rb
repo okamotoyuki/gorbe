@@ -1,8 +1,9 @@
+foo = 0
 unless true then
-  1
+  foo = 1
 else
-  2
+  foo = 2
 end
-
-1 unless true
-1 unless false
+p(foo)
+p(1) unless true
+p(1) unless false

@@ -1,7 +1,7 @@
-"this is a string expression\n" +
-'this is a string expression\n' +
-%q!I said, "You said, 'She said it.'"! +
-%!I said, "You said, 'She said it.'"! +
-%Q('This is it.'\n) +
-"this is multi line
-string"
+p("this is a string expression\n")
+p('this is a string expression\n')
+p(%q!I said, "You said, 'She said it.'"!)
+p(%!I said, "You said, 'She said it.'"!)
+p(%Q('This is it.'\n))
+p("this is multi line
+string")

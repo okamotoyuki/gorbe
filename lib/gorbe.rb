@@ -66,11 +66,13 @@ module Gorbe
       header = <<~EOS
         package #{package}
         import πg "grumpy"
+        import ρg "gorbe"
         var Code *πg.Code
         func init() {
         \tCode = πg.NewCode("<module>", #{script}, nil, 0, func(πF *πg.Frame, _ []*πg.Object) (*πg.Object, *πg.BaseException) {
         \t\tvar πR *πg.Object; _ = πR
         \t\tvar πE *πg.BaseException; _ = πE
+        \t\tπE = ρg.InitGlobalsForRuby(πF)
       EOS
       writer.write(header)
 

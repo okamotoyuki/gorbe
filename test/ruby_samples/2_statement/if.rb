@@ -1,10 +1,11 @@
+foo = 0
 if true then
-  1
+  foo = 1
 elsif false then
-  2
+  foo = 2
 else
-  3
+  foo = 3
 end
-
-1 if true
-1 if false
+p(foo)
+p(1) if true
+p(1) if false

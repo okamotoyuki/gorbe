@@ -1,9 +1,10 @@
 foo = 1
 case foo
 when 1 then
-	1
+  bar = 1
 when 2 then
-	2
+  bar = 2
 else
-	3
+  bar = 3
 end
+p(bar)
