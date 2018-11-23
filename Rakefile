@@ -17,7 +17,6 @@ private def compile(filepath, output)
   else
     output = gorbe.compile(STDIN, output)
   end
-  output.rewind
   return output
 end
 
@@ -45,9 +44,14 @@ task :run, :filepath do |task, args|
   return 1 if output.nil?  # Compile failed
 
   # Create Go file
-  go_file = File.open('build/gorbe/module.go', 'w')
-  go_file.write(output.read)
-  go_file.close
+  begin
+    File.open('build/gorbe/module.go', 'w') do |file|
+      file.write(output.read)
+      file.close
+    end
+  rescue => error
+    puts error
+  end
 
   # Run Go code
   sh 'go run go/main.go'

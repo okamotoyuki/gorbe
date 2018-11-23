@@ -92,6 +92,7 @@ module Gorbe
         }
       EOS
       writer.write(footer)
+      writer.out.rewind
       return writer.out
     end
   end

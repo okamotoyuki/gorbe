@@ -3,7 +3,10 @@ require 'gorbe'
 
 class CompilerTest < Minitest::Test
   def setup
-    @gorbe = Gorbe::Core.new(:debug)
+    @gorbe = Gorbe::Core.new(:info)
+
+    # Create Go package directory
+    `mkdir -p build/gorbe`
   end
 
   def teardown
@@ -19,8 +22,24 @@ class CompilerTest < Minitest::Test
                             .gsub('.rb', '')
                             .gsub('/', '_')}"
     define_method test_name do
-      @gorbe.compile_file(test_path)
-      # TODO : Add assert function here
+      # Compile Ruby code
+      output = @gorbe.compile_file(test_path, StringIO.new)
+      return 1 if output.nil?  # Compile failed
+
+      # Create Go file
+      begin
+        File.open('build/gorbe/module.go', 'w') do |file|
+          file.write(output.read)
+          file.close
+        end
+      rescue => error
+        puts error
+      end
+
+      # Run Go code
+      actual = `go run go/main.go`
+      expected = `ruby #{test_path}`
+      assert_equal(expected, actual)
     end
   end
 end
