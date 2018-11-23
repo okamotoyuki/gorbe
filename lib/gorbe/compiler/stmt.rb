@@ -39,10 +39,8 @@ module Gorbe
         @expr_visitor = Compiler::ExprVisitor.new(self)
       end
 
+      # e.g. [:program, [[:void_stmt]]]
       def visit_program(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:program, [[:void_stmt]]]
         raise CompileError.new(node, msg: 'Node size must be more than 1.') unless node.length > 1
 
         children = node.slice(1..-1)
@@ -52,7 +50,6 @@ module Gorbe
       end
 
       def visit_expr(node)
-        trace_activity(__method__.to_s)
         return @expr_visitor.visit(node)
       end
 
@@ -63,9 +60,9 @@ module Gorbe
       # TODO : This logic might be slow and need to be improved.
       private def generate_when_condition_node(target_expr_node, val_expr_nodes)
         # e.g. [:binary,
-        #         [:binary, target_expr_node, :===, val_expr_node_1],
-        #         :"||",
-        #         [:binary, target_expr_node, :===, val_expr_node_2]
+        #       [:binary, target_expr_node, :===, val_expr_node_1],
+        #       :"||",
+        #       [:binary, target_expr_node, :===, val_expr_node_2]
         #      ]
         condition_node = nil
         val_expr_nodes.each do |val_expr_node|
@@ -76,20 +73,16 @@ module Gorbe
         return condition_node
       end
 
+      # e.g. [:case, $expr, [:when, ...]]
       def visit_case(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:case, $expr, [:when, ...]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         bodies = [] # Branch bodies
         visit_typed_node(node[2], :when, bodies: bodies, target_expr_node: node[1])
       end
 
+      # e.g. [:when, $expr, [$expr, $expr...], [:else, ...]]
       def visit_when(node, bodies:, target_expr_node:)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:when, $expr, [$expr, $expr...], [:else, ...]]
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
 
         condition_node = generate_when_condition_node(target_expr_node, node[1])
@@ -144,20 +137,16 @@ module Gorbe
         end
       end
 
+      # e.g. [:if, $cond_expr, [$expr, $expr...], [:elsif, $cond_expr, [$expr, $expr...], [:else, [$expr, $expr]]]
+      #      [:if_mod, $cond_expr, $expr]
       def visit_if_or_unless(node, bodies: nil)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:if, $cond_expr, [$expr, $expr...], [:elsif, $cond_expr, [$expr, $expr...], [:else, [$expr, $expr]]]
-        #      [:if_mod, $cond_expr, $expr]
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 3 || node.length == 4
 
         visit_branch(node, bodies.nil? ? [] : bodies, node[0], node[1], node[2], node[3])
       end
 
+      # e.g. [:else, [$expr, $expr...]]
       def visit_else(node, bodies:)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:else, [$expr, $expr...]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         default_label = @block.gen_label

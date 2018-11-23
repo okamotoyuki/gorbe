@@ -17,8 +17,7 @@ module Gorbe
       end
 
       # Print visitor activity
-      def trace_activity(method_name)
-
+      private def trace(method_name)
         # Calculate depth
         depth = @depth
         visitor = self
@@ -42,6 +41,7 @@ module Gorbe
       # Traverse Ruby AST
       private def _visit(node, nodetype, **args)
         method_type = @nodetype_map.key?(node[0]) ? @nodetype_map[node[0]] : 'general'
+        trace(method_type)
         return args.empty? ? send("visit_#{method_type}", node) : send("visit_#{method_type}", node, **args)
       end
 

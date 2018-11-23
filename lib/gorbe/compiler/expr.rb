@@ -102,10 +102,8 @@ module Gorbe
         )
       end
 
+      # e.g. [:binary, [:@int, "1", [1, 0]], :+, [:@int, "1", [1, 4]]]
       def visit_binary(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:binary, [:@int, "1", [1, 0]], :+, [:@int, "1", [1, 4]]]
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
         lhs = visit(node[1])&.expr
         operator = node[2]
@@ -127,10 +125,8 @@ module Gorbe
         return result
       end
 
+      # e.g. [:unary, :-@, [:@int, "123", [1, 1]]]
       def visit_unary(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:unary, :-@, [:@int, "123", [1, 1]]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         operator = node[1]
@@ -154,10 +150,8 @@ module Gorbe
         return result
       end
 
+      # e.g. [:var_ref, [:@kw, "true", [1, 0]]]
       def visit_var_ref(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:var_ref, [:@kw, "true", [1, 0]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         var_node = node[1]
@@ -173,19 +167,15 @@ module Gorbe
         return @block.resolve_name(@writer, var)
       end
 
+      # e.g. [:@kw, "true", [1, 0]]
       def visit_kw(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:@kw, "true", [1, 0]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         return node[1]
       end
 
+      # e.g. [:@int, "1", [1, 0]]
       def visit_num(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:@int, "1", [1, 0]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         type = node[0]
@@ -203,10 +193,8 @@ module Gorbe
         return Literal.new('πg.' + expr_str + '.ToObject()')
       end
 
+      # e.g. [:string_literal, [:string_content, [:@tstring_content, "this is a string expression\\n", [1, 1]]]]
       def visit_string_literal(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:string_literal, [:string_content, [:@tstring_content, "this is a string expression\\n", [1, 1]]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         # TODO : Check if the string is unicode and generate 'πg.NewUnicode({}).ToObject()'
@@ -214,19 +202,15 @@ module Gorbe
         return visit_typed_node(node[1], :string_content)
       end
 
+      # e.g. [:string_content, [:@tstring_content, "this is a string expression\\n", [1, 1]]]
       def visit_string_content(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:string_content, [:@tstring_content, "this is a string expression\\n", [1, 1]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         return visit_typed_node(node[1], '@tstring_content'.to_sym)
       end
 
+      # e.g. [:@tstring_content, "this is a string expression\\n", [1, 1]]
       def visit_tstring_content(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:@tstring_content, "this is a string expression\\n", [1, 1]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         str = node[1]
@@ -234,10 +218,8 @@ module Gorbe
         return Literal.new(expr_str)
       end
 
+      # e.g. [:array, [[:@int, "1", [1, 1]], [:@int, "2", [1, 4]], [:@int, "3", [1, 7]]]
       def visit_array(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:array, [[:@int, "1", [1, 1]], [:@int, "2", [1, 4]], [:@int, "3", [1, 7]]]
         raise CompileError.new(node, msg: 'Node size must be more than 1.') unless node.length > 1
 
         result = nil
@@ -259,10 +241,8 @@ module Gorbe
         return result
       end
 
+      # e.g. [:hash, [:assoclist_from_args, [[:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]]]]
       def visit_hash(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:hash, [:assoclist_from_args, [[:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         result = nil
@@ -276,10 +256,8 @@ module Gorbe
         return result
       end
 
+      # e.g. [:assoclist_from_args, [[:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]]]
       def visit_assoclist_from_args(node, hash:)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:assoclist_from_args, [[:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]]]
         raise CompileError.new(node, msg: 'Node must have Array.') unless node[1].is_a?(Array)
 
         node[1].each do |assoc_new_node|
@@ -287,10 +265,8 @@ module Gorbe
         end
       end
 
+      # e.g. [:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]
       def visit_assoc_new(node, hash:)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:assoc_new, [:@int, "1", [1, 2]], [:@int, "2", [1, 7]]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         with(key: visit(node[1]), value: visit(node[2])) do |temps|
@@ -298,10 +274,8 @@ module Gorbe
         end
       end
 
+      # e.g. [:assign, [:var_field, [:@ident, "foo", [1, 0]]], [:@int, "1", [1, 6]]]
       def visit_assign(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:assign, [:var_field, [:@ident, "foo", [1, 0]]], [:@int, "1", [1, 6]]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         with(value: visit(node[2])) do |temps|
@@ -310,30 +284,24 @@ module Gorbe
         end
       end
 
+      # e.g. [:@ident, "foo", [1, 0]]
       def visit_ident(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:@ident, "foo", [1, 0]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         return node[1]
       end
 
+      # e.g. [:var_field, [:@ident, "foo", [1, 0]]]
       def visit_var_field(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:var_field, [:@ident, "foo", [1, 0]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         return visit_typed_node(node[1], '@ident'.to_sym)
       end
 
+      # e.g. [:method_add_arg,
+      #       [:fcall, [:@ident, "puts", [1, 0]]],
+      #       [:arg_paren, [:args_add_block, [[:@int, "1", [1, 5]]], false]]]
       def visit_method_add_arg(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:method_add_arg,
-        #       [:fcall, [:@ident, "puts", [1, 0]]],
-        #       [:arg_paren, [:args_add_block, [[:@int, "1", [1, 5]]], false]]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         arg_info = visit_typed_node(node[2], :arg_paren)
@@ -353,28 +321,22 @@ module Gorbe
         return result
       end
 
+      # e.g. [:fcall, [:@ident, "puts", [1, 0]]],
       def visit_fcall(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:fcall, [:@ident, "puts", [1, 0]]],
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 2
 
         return @block.resolve_name(@writer, visit_typed_node(node[1], '@ident'.to_sym))
       end
 
+      # e.g. [:arg_paren, [:args_add_block, [[:@int, "1", [1, 5]]], false]]]
       def visit_arg_paren(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:arg_paren, [:args_add_block, [[:@int, "1", [1, 5]]], false]]]
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         return visit_typed_node(node[1], :args_add_block)
       end
 
+      # e.g. [:args_add_block, [[:@int, "1", [1, 5]]], false]]
       def visit_args_add_block(node)
-        trace_activity(__method__.to_s)
-
-        # e.g. [:args_add_block, [[:@int, "1", [1, 5]]], false]]
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         # Build positional arguments.
