@@ -1,2 +1,2 @@
-p(true)
-p(false)
+true
+false

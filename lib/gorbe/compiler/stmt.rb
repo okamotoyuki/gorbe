@@ -117,6 +117,7 @@ module Gorbe
 
         if next_branch_node.nil?  # If there is no 'else' statement
           end_label = @block.gen_label
+          @writer.write("goto Label%d" % end_label)
 
           # Write labels and bodies
           bodies.each do |body|

@@ -1,9 +1,18 @@
+unless true
+  p(1)
+end
+
+unless false
+  p(2)
+end
+
 foo = 0
 unless true then
-  foo = 1
+  foo = 3
 else
-  foo = 2
+  foo = 4
 end
 p(foo)
-p(1) unless true
-p(1) unless false
+
+p(5) unless true
+p(6) unless false
