@@ -27,7 +27,7 @@ Or install it yourself as:
 
 ```bash
 $ cd bin
-$ echo "1 + 1" | ./gorbec
+$ echo "p(1 + 1) unless false" | ./gorbec
 ```
 
 ### Compile Ruby to Go source code and immediately run it on Grumpy
@@ -52,7 +52,7 @@ $ echo "1 + 1" | ./gorbec
     ```
 5. Run
     ```bash
-    $ echo "p(1 + 1)" | rake run
+    $ echo "p(1 + 1) unless false" | rake run
     ```
     
 ### Run test
