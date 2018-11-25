@@ -79,6 +79,7 @@ module Gorbe
         super(block: stmt_visitor.block, parent: stmt_visitor, writer:  stmt_visitor.writer, nodetype_map:
             {
                 array: 'array',
+                aref: 'aref',
                 assign: 'assign',
                 assoclist_from_args: 'assoclist_from_args',
                 assoc_new: 'assoc_new',
@@ -226,6 +227,17 @@ module Gorbe
         with(elems: visit_sequential_elements(node[1])) do |temps|
           result = @block.alloc_temp
           @writer.write("#{result.expr} = πg.NewList(#{temps[:elems].expr}...).ToObject()")
+        end
+        return result
+      end
+
+      # e.g. [:aref, [:var_ref, [:@ident, "foo", [2, 2]]], [:args_add_block, [[:@int, "0", [2, 6]]], false]]
+      def visit_aref(node)
+        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        result = self.block.alloc_temp()
+        with(rhs: visit(node[2])[:argv], lhs: visit(node[1])) do |temps|
+          @writer.write_checked_call2(result, "πg.GetItem(πF, #{temps[:lhs].expr}, #{temps[:rhs].expr}[0])")
         end
         return result
       end

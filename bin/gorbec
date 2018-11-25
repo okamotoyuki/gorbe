@@ -4,7 +4,7 @@ $:.unshift('../lib')
 require 'gorbe'
 
 def main
-  gorbe = Gorbe::Core.new
+  gorbe = Gorbe::Core.new(:debug)
   unless ARGV[0].nil? then
     gorbe.compile_file(ARGV[0])
   else

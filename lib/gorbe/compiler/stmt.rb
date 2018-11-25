@@ -19,6 +19,7 @@ module Gorbe
                 '@ident': 'expr',
                 '@int': 'expr',
                 '@float': 'expr',
+                aref: 'expr',
                 var_field: 'expr',
                 var_ref: 'expr',
                 string_literal: 'expr',

@@ -1,3 +1,5 @@
+require 'gorbe/compiler/error'
+
 module Gorbe
   module Compiler
 
