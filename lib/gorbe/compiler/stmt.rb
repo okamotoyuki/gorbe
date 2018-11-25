@@ -63,11 +63,11 @@ module Gorbe
         val_expr_nodes.each_with_index do |val_expr_node, i|
           with(val: visit(val_expr_node)) do |temps|
             if i == 0
-              @writer.write("#{condition.name}, πE = πg.Eq(πF, #{case_expr.expr}, #{temps[:val].expr})")
+              @writer.write_checked_call2(condition, "πg.Eq(πF, #{case_expr.expr}, #{temps[:val].expr})")
             else
               with(single_condition: @block.alloc_temp) do |temps2|
-                @writer.write("#{temps2[:single_condition].name}, πE = πg.Eq(πF, #{case_expr.expr}, #{temps[:val].expr})")
-                @writer.write("#{condition.name}, πE = πg.Or(πF, #{condition.expr}, #{temps2[:single_condition].expr})")
+                @writer.write_checked_call2(temps2[:single_condition], "πg.Eq(πF, #{case_expr.expr}, #{temps[:val].expr})")
+                @writer.write_checked_call2(condition, "πg.Or(πF, #{condition.expr}, #{temps2[:single_condition].expr})")
               end
             end
           end
