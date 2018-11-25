@@ -58,43 +58,43 @@ module Gorbe
         # Do nothing
       end
 
-      private def generate_when_condition(case_expr, val_expr_nodes)
-        condition = @block.alloc_temp
-        val_expr_nodes.each_with_index do |val_expr_node, i|
-          with(val: visit(val_expr_node)) do |temps|
-            if i == 0
-              @writer.write_checked_call2(condition, "πg.Eq(πF, #{case_expr.expr}, #{temps[:val].expr})")
-            else
-              with(single_condition: @block.alloc_temp) do |temps2|
-                @writer.write_checked_call2(temps2[:single_condition], "πg.Eq(πF, #{case_expr.expr}, #{temps[:val].expr})")
-                @writer.write_checked_call2(condition, "πg.Or(πF, #{condition.expr}, #{temps2[:single_condition].expr})")
-              end
-            end
-          end
-        end
-        return condition
-      end
-
       # e.g. [:case, $expr, [:when, ...]]
       def visit_case(node)
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         bodies = [] # Branch bodies
         with(case_expr: visit(node[1])) do |temps|
-          visit_typed_node(node[2], :when, bodies: bodies, case_expr: temps[:case_expr])
+
+          # Generate condition for "when" statement
+          condition_generator = lambda do |val_expr_nodes|
+            condition = @block.alloc_temp
+            val_expr_nodes.each_with_index do |val_expr_node, i|
+              with(val: visit(val_expr_node)) do |temps2|
+                if i == 0
+                  @writer.write_checked_call2(condition, "πg.Eq(πF, #{temps[:case_expr].expr}, #{temps2[:val].expr})")
+                else
+                  with(single_condition: @block.alloc_temp) do |temps3|
+                    @writer.write_checked_call2(temps3[:single_condition], "πg.Eq(πF, #{temps[:case_expr].expr}, #{temps2[:val].expr})")
+                    @writer.write_checked_call2(condition, "πg.Or(πF, #{condition.expr}, #{temps3[:single_condition].expr})")
+                  end
+                end
+              end
+            end
+            return condition
+          end
+
+          visit_typed_node(node[2], :when, cond_gen: condition_generator, bodies: bodies)
         end
       end
 
       # e.g. [:when, $expr, [$expr, $expr...], [:else, ...]]
-      def visit_when(node, bodies:, case_expr:)
+      def visit_when(node, cond_gen:, bodies:)
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
 
-        with(condition: generate_when_condition(case_expr, node[1])) do |temps|
-          visit_branch(node, bodies, node[0], temps[:condition], node[2], node[3], case_expr)
-        end
+        visit_branch(node, bodies, node[0], cond_gen, node[2], node[3])
       end
 
-      private def visit_branch(node, bodies, branch_type, condition, body_node, next_branch_node, case_expr=nil)
+      private def visit_branch(node, bodies, branch_type, cond_gen, body_node, next_branch_node)
         # Check if '!' is needed for the condition depending on the branch type
         case branch_type
         when :if, :elsif, :if_mod, :when then
@@ -106,7 +106,7 @@ module Gorbe
         end
 
         label = @block.gen_label
-        with(condition: condition, is_true: @block.alloc_temp('bool')) do |temps|
+        with(condition: cond_gen.call(node[1]), is_true: @block.alloc_temp('bool')) do |temps|
           template = <<~EOS
             if #{temps[:is_true].expr}, πE = πg.IsTrue(πF, #{temps[:condition].expr}); πE != nil {
             \tcontinue
@@ -133,7 +133,7 @@ module Gorbe
         else  # If there is 'elsif', 'else' or 'when' statement
           case next_branch_node[0]
           when :when then
-            visit_typed_node(next_branch_node, :when, bodies: bodies, case_expr: case_expr)
+            visit_typed_node(next_branch_node, :when, cond_gen: cond_gen, bodies: bodies)
           when :elsif, :else then
             visit_typed_node(next_branch_node, next_branch_node[0], bodies: bodies)
           else
@@ -148,9 +148,7 @@ module Gorbe
       def visit_if_or_unless(node, bodies: nil)
         raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 3 || node.length == 4
 
-        with(condition: visit(node[1])) do |temps|
-          visit_branch(node, bodies.nil? ? [] : bodies, node[0], temps[:condition], node[2], node[3])
-        end
+        visit_branch(node, bodies.nil? ? [] : bodies, node[0], lambda { |node| return visit(node) }, node[2], node[3])
       end
 
       # e.g. [:else, [$expr, $expr...]]
