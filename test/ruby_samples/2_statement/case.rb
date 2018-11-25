@@ -1,10 +1,10 @@
 foo = 1
 case foo
-when 1 then
-  bar = 1
-when 2 then
-  bar = 2
+when 1, 2, 3 then
+  bar = 4
+when 5, 6 then
+  bar = 7
 else
-  bar = 3
+  bar = 8
 end
 p(bar)
