@@ -50,8 +50,8 @@ module Gorbe
     class ExprVisitor < Visitor
 
       BIN_OP_TEMPLATES = {
-          :"&&" => lambda { |lhs, rhs| "πg.And(πF, #{lhs}, #{rhs})" },
-          :"||" => lambda { |lhs, rhs| "πg.Or(πF, #{lhs}, #{rhs})" },
+          :"&&" => lambda { |lhs, rhs| "πg.And(πF, #{lhs}, #{rhs})" },  # FIXME : πg.And() is actually 'Bit And' and not 'Logical And'
+          :"||" => lambda { |lhs, rhs| "πg.Or(πF, #{lhs}, #{rhs})" },   # FIXME : πg.Or() is actually 'Bit Or' and not 'Logical Or'
           :^ => lambda { |lhs, rhs| "πg.Xor(πF, #{lhs}, #{rhs})" },
           :+ => lambda { |lhs, rhs| "πg.Add(πF, #{lhs}, #{rhs})" },
           :/ => lambda { |lhs, rhs| "πg.Div(πF, #{lhs}, #{rhs})" },
