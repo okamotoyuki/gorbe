@@ -33,6 +33,7 @@ module Gorbe
                 else: 'else',
                 method_add_arg: 'expr',
                 fcall: 'expr',
+                while: 'while',
                 arg_paren: 'expr',
                 args_add_block: 'expr'
             }
@@ -167,6 +168,68 @@ module Gorbe
           @writer.write("goto Label%d" % end_label)
         end
         @writer.write_label(end_label)
+      end
+
+      # e.g.
+      def visit_while(node)
+        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        test_func = lambda do |test_var|
+          with(visit(node[1])) do |condition|
+            @writer.write_checked_call2(test_var, "πg.IsTrue(πF, #{condition.expr})")
+          end
+        end
+
+        visit_loop(test_func, node)
+      end
+
+      private def visit_loop(test_func, node)
+        start_label = @block.gen_label(true)
+        else_label = @block.gen_label(true)
+        end_label = @block.gen_label
+        with(block.alloc_temp('bool')) do |break_var|
+          @block.push_loop(break_var)
+          @writer.write("πF.PushCheckpoint(#{else_label})")
+          @writer.write("#{break_var.name} = false")
+          @writer.write_label(start_label)
+          tmpl = <<~EOS
+            if πE != nil || πR != nil {
+            \tcontinue
+            }
+            if #{break_var.expr} {
+            \tπF.PopCheckpoint()
+            \tgoto Label#{end_label}
+            }
+          EOS
+          @writer.write(tmpl)
+          with(@block.alloc_temp('bool')) do |test_var|
+            test_func.call(test_var)
+            tmpl = <<~EOS
+              if πE != nil || !#{test_var.name} {
+              \tcontinue
+              }
+              πF.PushCheckpoint(#{start_label})
+            EOS
+            @writer.write(tmpl)
+          end
+          visit(node[2])
+          @writer.write('continue')
+
+          # End the loop so that break applies to an outer loop if present.
+          @block.pop_loop
+          @writer.write_label(else_label)
+          tmpl = <<~EOS
+            if πE != nil || πR != nil {
+            \tcontinue
+            }
+          EOS
+          @writer.write(tmpl)
+
+          # if node.orelse
+          #   visit_each(node.orelse)
+          # end
+          @writer.write_label(end_label)
+        end
       end
 
     end

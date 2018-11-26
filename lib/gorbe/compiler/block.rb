@@ -6,8 +6,10 @@ module Gorbe
     NON_WORD_REGEX = Regexp.new('[^A-Za-z0-9_]')
 
     class Loop
+      attr_reader :break_var
 
-      def initialize
+      def initialize(break_var)
+        @break_var = break_var
       end
 
     end
@@ -16,6 +18,7 @@ module Gorbe
       attr_reader :free_temps
       attr_reader :used_temps
       attr_reader :root
+      attr_reader :checkpoints
 
       def initialize(parent=nil, name=nil)
         @root = parent ? parent.root : self
@@ -25,8 +28,8 @@ module Gorbe
         @used_temps = Set.new
         @temp_index = 0
         @label_count = 0
-        @check_points = Set.new
-        # @loop_stack
+        @checkpoints = []
+        @loop_stack = []
         # @is_generator
       end
 
@@ -36,7 +39,7 @@ module Gorbe
       def gen_label(is_checkpoint=false)
         @label_count += 1
         if is_checkpoint
-          @check_points.add(@label_count)
+          @checkpoints.push(@label_count)
         end
         return @label_count
       end
@@ -59,6 +62,16 @@ module Gorbe
       def free_temp(v)
         @used_temps.delete(v)
         @free_temps.add(v)
+      end
+
+      def push_loop(break_var)
+        loop = Loop.new(break_var)
+        @loop_stack.push(loop)
+        return loop
+      end
+
+      def pop_loop()
+        @loop_stack.pop
       end
 
       private def resolve_global(writer, name)

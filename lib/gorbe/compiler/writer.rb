@@ -40,9 +40,9 @@ module Gorbe
         indent_block do
           write('switch πF.State() {')
           write('case 0:')
-          # block.checkpoints.each do |checkpoint|
-          #   write("case #{checkpoint}: goto Label#{checkpoint}")
-          # end
+          block.checkpoints.each do |checkpoint|
+            write("case #{checkpoint}: goto Label#{checkpoint}")
+          end
           write('default: panic("unexpected function state")')
           write('}')
           indent_block(-1) do
