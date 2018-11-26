@@ -31,12 +31,12 @@ module Gorbe
       end
 
       # Do something with temporary variables and free them after that
-      private def with(**args)
-        yield(args) if block_given?
+      private def with(*args)
+        yield(*args) if block_given?
 
         # Free unused temporary values
-        args.each do |key, val|
-          val.free
+        args.each do |var|
+          var.free
         end
       end
 

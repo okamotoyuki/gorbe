@@ -224,9 +224,9 @@ module Gorbe
         raise CompileError.new(node, msg: 'Node size must be more than 1.') unless node.length > 1
 
         result = nil
-        with(elems: visit_sequential_elements(node[1])) do |temps|
+        with(visit_sequential_elements(node[1])) do |elems|
           result = @block.alloc_temp
-          @writer.write("#{result.expr} = πg.NewList(#{temps[:elems].expr}...).ToObject()")
+          @writer.write("#{result.expr} = πg.NewList(#{elems.expr}...).ToObject()")
         end
         return result
       end
@@ -236,8 +236,8 @@ module Gorbe
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         result = self.block.alloc_temp()
-        with(rhs: visit(node[2])[:argv], lhs: visit(node[1])) do |temps|
-          @writer.write_checked_call2(result, "πg.GetItem(πF, #{temps[:lhs].expr}, #{temps[:rhs].expr}[0])")
+        with(visit(node[2])[:argv], visit(node[1])) do |rhs, lhs|
+          @writer.write_checked_call2(result, "πg.GetItem(πF, #{lhs.expr}, #{rhs.expr}[0])")
         end
         return result
       end
@@ -246,8 +246,8 @@ module Gorbe
         result = @block.alloc_temp('[]*πg.Object')
         @writer.write("#{result.expr} = make([]*πg.Object, #{nodes.length})")
         nodes.each_with_index do |node, i|
-          with(elem: visit(node)) do |temps|
-           @writer.write("#{result.expr}[#{i}] = #{temps[:elem].expr}")
+          with(visit(node)) do |elem|
+           @writer.write("#{result.expr}[#{i}] = #{elem.expr}")
           end
         end
         return result
@@ -258,11 +258,11 @@ module Gorbe
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
         result = nil
-        with(hash: @block.alloc_temp('*πg.Dict')) do |temps|
-          @writer.write("#{temps[:hash].name} = πg.NewDict()")
-          visit_typed_node(node[1], :assoclist_from_args, hash: temps[:hash])
+        with(@block.alloc_temp('*πg.Dict')) do |hash|
+          @writer.write("#{hash.name} = πg.NewDict()")
+          visit_typed_node(node[1], :assoclist_from_args, hash: hash)
           result = @block.alloc_temp
-          @writer.write("#{result.name} = #{temps[:hash].expr}.ToObject()")
+          @writer.write("#{result.name} = #{hash.expr}.ToObject()")
         end
 
         return result
@@ -281,8 +281,8 @@ module Gorbe
       def visit_assoc_new(node, hash:)
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
-        with(key: visit(node[1]), value: visit(node[2])) do |temps|
-          @writer.write_checked_call1("#{hash.expr}.SetItem(πF, #{temps[:key].expr}, #{temps[:value].expr})")
+        with(visit(node[1]), visit(node[2])) do |key, value|
+          @writer.write_checked_call1("#{hash.expr}.SetItem(πF, #{key.expr}, #{value.expr})")
         end
       end
 
@@ -290,9 +290,9 @@ module Gorbe
       def visit_assign(node)
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
-        with(value: visit(node[2])) do |temps|
+        with(visit(node[2])) do |value|
           target = visit_typed_node(node[1], :var_field)
-          @block.bind_var(@writer, target, temps[:value].expr)
+          @block.bind_var(@writer, target, value.expr)
         end
       end
 
@@ -321,9 +321,9 @@ module Gorbe
         argv = arg_info[:argv]
         result = nil
 
-        with(args: argv, func: visit_typed_node(node[1], :fcall)) do |temps|
+        with(argv, visit_typed_node(node[1], :fcall)) do |args, func|
           result = @block.alloc_temp
-          @writer.write_checked_call2(result, "#{temps[:func].expr}.Call(πF, #{temps[:args].expr}, #{NIL_EXPR.expr})")
+          @writer.write_checked_call2(result, "#{func.expr}.Call(πF, #{args.expr}, #{NIL_EXPR.expr})")
         end
 
         if argc > 0
@@ -359,8 +359,8 @@ module Gorbe
           argv = self.block.alloc_temp('[]*πg.Object')
           @writer.write("#{argv.expr} = πF.MakeArgs(#{argc})")
           node[1].each_with_index do |node, i|
-            with(arg: visit(node)) do |temps|
-              @writer.write("#{argv.expr}[#{i}] = #{temps[:arg].expr}")
+            with(visit(node)) do |arg|
+              @writer.write("#{argv.expr}[#{i}] = #{arg.expr}")
             end
           end
         end

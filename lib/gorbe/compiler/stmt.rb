@@ -63,19 +63,19 @@ module Gorbe
         raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
 
         bodies = [] # Branch bodies
-        with(case_expr: visit(node[1])) do |temps|
+        with(visit(node[1])) do |case_expr|
 
           # Generate condition for "when" statement
           condition_generator = lambda do |val_expr_nodes|
             condition = @block.alloc_temp
             val_expr_nodes.each_with_index do |val_expr_node, i|
-              with(val: visit(val_expr_node)) do |temps2|
+              with(visit(val_expr_node)) do |val|
                 if i == 0
-                  @writer.write_checked_call2(condition, "πg.Eq(πF, #{temps[:case_expr].expr}, #{temps2[:val].expr})")
+                  @writer.write_checked_call2(condition, "πg.Eq(πF, #{case_expr.expr}, #{val.expr})")
                 else
-                  with(single_condition: @block.alloc_temp) do |temps3|
-                    @writer.write_checked_call2(temps3[:single_condition], "πg.Eq(πF, #{temps[:case_expr].expr}, #{temps2[:val].expr})")
-                    @writer.write_checked_call2(condition, "πg.Or(πF, #{condition.expr}, #{temps3[:single_condition].expr})")
+                  with(@block.alloc_temp) do |single_condition|
+                    @writer.write_checked_call2(single_condition, "πg.Eq(πF, #{case_expr.expr}, #{val.expr})")
+                    @writer.write_checked_call2(condition, "πg.Or(πF, #{condition.expr}, #{single_condition.expr})")
                   end
                 end
               end
@@ -106,12 +106,12 @@ module Gorbe
         end
 
         label = @block.gen_label
-        with(condition: cond_gen.call(node[1]), is_true: @block.alloc_temp('bool')) do |temps|
+        with(cond_gen.call(node[1]), @block.alloc_temp('bool')) do |condition, is_true|
           template = <<~EOS
-            if #{temps[:is_true].expr}, πE = πg.IsTrue(πF, #{temps[:condition].expr}); πE != nil {
+            if #{is_true.expr}, πE = πg.IsTrue(πF, #{condition.expr}); πE != nil {
             \tcontinue
             }
-            if #{is_not ? '!' : ''}#{temps[:is_true].expr} {
+            if #{is_not ? '!' : ''}#{is_true.expr} {
             \tgoto Label#{label}
             }
           EOS
