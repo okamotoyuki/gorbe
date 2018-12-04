@@ -37,7 +37,9 @@ module Gorbe
                 arg_paren: 'expr',
                 args_add_block: 'expr',
                 def: 'def',
-                bodystmt: 'bodystmt'
+                bodystmt: 'bodystmt',
+                return: 'return',
+                return0: 'return',
             }
         )
         @expr_visitor = Compiler::ExprVisitor.new(self)
@@ -306,6 +308,21 @@ module Gorbe
         raise CompileError.new(node, msg: 'Node size must be 5.') unless node.length == 5
 
         return visit(node[1])
+      end
+
+      # e.g. [:return, [:args_add_block, [[$expr, $expr...], false]]
+      def visit_return(node)
+        raise CompileError.new(node, msg: '"return" should be called in a method.') unless @block.is_a?(FunctionBlock)
+        raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
+
+        if node[0] === :return
+          with(visit_typed_node(node[1], :args_add_block)[:argv]) do |value|
+            @writer.write("πR = #{value.expr}[0]")  # TODO : Support returning multiple values
+          end
+        else
+          @writer.write('πR = πg.None')
+        end
+        @writer.write('continue')
       end
 
     end
