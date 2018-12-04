@@ -4,7 +4,7 @@ require 'gorbe/compiler/stmt'
 
 class StatementVisitorTest < Minitest::Test
   def setup
-    block = Gorbe::Compiler::TopLevel.new
+    block = Gorbe::Compiler::TopLevelBlock.new
     @stmt_visitor = Gorbe::Compiler::StatementVisitor.new(block)
   end
 

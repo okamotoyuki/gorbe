@@ -10,7 +10,7 @@ module Gorbe
       attr_reader :writer
       attr_reader :depth
 
-      def initialize(block: nil, parent: nil, writer: nil, nodetype_map: {})
+      def initialize(block: nil, parent: nil, writer: nil, nodetype_map: {}, node: nil)
         @block = block
         @parent = parent
         @writer = writer
@@ -27,7 +27,8 @@ module Gorbe
           depth += visitor.parent.depth
           visitor = visitor.parent
         end
-        Gorbe.logger.debug('  ' * (depth - 1) + '(' + method_name + ')')
+        Gorbe.logger.debug('  ' * (depth - 1) +
+                               "(#{self.class.name.split('::')[-1].gsub('Visitor', '')} - #{method_name})")
       end
 
       # Do something with temporary variables and free them after that
@@ -58,11 +59,16 @@ module Gorbe
           return result
         end
 
-        if node[0].is_a?(Symbol) || node[0].is_a?(String) # TODO : Should we actually consider "String" type?
+        if node[0].is_a?(Symbol) || node[0].is_a?(String) # TODO : Should we really need to consider "String" type?
           result = _visit(node, node[0])
-        elsif node[0].is_a?(Array)
-          node.each do |single_node|
-            result = visit(single_node)
+        elsif node[0].is_a?(Array)  # Visit multiple nodes at once
+          result = []
+          node.each_with_index do |single_node, i|
+            if block_given?
+              result.push(yield(visit(single_node), i))
+            else
+              result.push(visit(single_node))
+            end
           end
         else
           raise CompileError.new(node, msg: 'Not supported AST node.')

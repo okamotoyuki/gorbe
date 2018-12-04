@@ -245,11 +245,13 @@ module Gorbe
       private def visit_sequential_elements(nodes)
         result = @block.alloc_temp('[]*πg.Object')
         @writer.write("#{result.expr} = make([]*πg.Object, #{nodes.length})")
-        nodes.each_with_index do |node, i|
-          with(visit(node)) do |elem|
+
+        visit(nodes) do |element, i|
+          with(element) do |elem|
            @writer.write("#{result.expr}[#{i}] = #{elem.expr}")
           end
         end
+
         return result
       end
 

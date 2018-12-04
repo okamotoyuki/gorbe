@@ -52,7 +52,7 @@ module Gorbe
 
     # Generate Go code from Ruby AST
     def generate_go_code(ast, output)
-      toplevel = Compiler::TopLevel.new
+      toplevel = Compiler::TopLevelBlock.new
       visitor = Compiler::StatementVisitor.new(toplevel)
 
       visitor.writer.indent_block do

@@ -6,7 +6,7 @@ require 'gorbe/compiler/expr'
 class ExprVisitorTest < Minitest::Test
   def setup
     Gorbe::logger = MiniTest::Mock.new.expect(:fatal, nil, [String])
-    block = Gorbe::Compiler::TopLevel.new
+    block = Gorbe::Compiler::TopLevelBlock.new
     stmt_visitor = Gorbe::Compiler::StatementVisitor.new(block)
     @expr_visitor = Gorbe::Compiler::ExprVisitor.new(stmt_visitor)
   end

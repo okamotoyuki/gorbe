@@ -26,7 +26,7 @@ func InitGlobalsForRuby(f *πg.Frame) (*πg.BaseException) {
 		return raised
 	}
 	if raised :=
-		f.Globals().SetItemString(f, "p", πg.NewBuiltinFunction("puts", temporaryP).ToObject()); raised != nil {
+		f.Globals().SetItemString(f, "p", πg.NewBuiltinFunction("p", temporaryP).ToObject()); raised != nil {
 		return raised
 	}
 	return nil

@@ -35,7 +35,9 @@ module Gorbe
                 fcall: 'expr',
                 while: 'while',
                 arg_paren: 'expr',
-                args_add_block: 'expr'
+                args_add_block: 'expr',
+                def: 'def',
+                bodystmt: 'bodystmt'
             }
         )
         @expr_visitor = Compiler::ExprVisitor.new(self)
@@ -230,6 +232,80 @@ module Gorbe
           # end
           @writer.write_label(end_label)
         end
+      end
+
+      def visit_def(node)
+        func = visit_function_inline(node)
+        @block.bind_var(@writer, visit_typed_node(node[1], '@ident'.to_sym), func.expr)
+      end
+
+      private def visit_function_inline(node)
+        func_visitor = FunctionBlockVisitor.new(node: node)
+        func_name = func_visitor.visit_typed_node(node[1], '@ident'.to_sym)
+        func_visitor.visit(node[3])
+        func_block = FunctionBlock.new(@block, func_name, func_visitor.vars)
+        visitor = StatementVisitor.new(func_block)
+
+        visitor.writer.indent_block(1) do
+          visitor.visit(node[3])
+        end
+
+        result = @block.alloc_temp
+        with(@block.alloc_temp('[]πg.Param')) do |func_args|
+          args = func_visitor.vars
+          argc = args.length
+          @writer.write("#{func_args.expr} = make([]πg.Param, #{argc})")
+
+          # TODO : Handle default args appropriately
+          args.each_with_index do |(key, val), i|
+            with(NIL_EXPR) do |default|
+              tmpl = "#{func_args.expr}[#{i}] = πg.Param{Name: #{Util::generate_go_string(key)}, Def: #{default.expr}}"
+              @writer.write(tmpl)
+            end
+          end
+
+          # TODO : Handle vargs and kwargs appropriately
+
+          go_func_name = Util::generate_go_string(func_name)
+          go_filename = Util::generate_go_string('gorbe') # FIXME
+          tmpl =
+            "#{result.name} = πg.NewFunction(πg.NewCode(#{go_func_name}, #{go_filename}, #{func_args.expr}, " +
+            "0, func(πF *πg.Frame, πArgs []*πg.Object) " +
+            "(*πg.Object, *πg.BaseException) {"
+          @writer.write(tmpl)
+
+          @writer.indent_block(1) do
+            func_block.vars.each do |name, var|
+              unless var.type == Var::TYPE_GLOBAL
+                go_var_name = Util::get_go_identifier(var.name)
+                @writer.write("var #{go_var_name} *πg.Object = #{var.init_expr}; _ = #{go_var_name}")
+              end
+              @writer.write_temp_decls(func_block)
+              @writer.write('var πR *πg.Object; _ = πR')
+              @writer.write('var πE *πg.BaseException; _ = πE')
+
+              @writer.write_block(func_block, visitor.writer.value)
+
+              tmpl = <<~EOS
+                if πE != nil {
+                \tπR = nil
+                } else if πR == nil {
+                \tπR = πg.None
+                }
+                return πR, πE
+              EOS
+              @writer.write(tmpl)
+            end
+          end
+          @writer.write('}), πF.Globals()).ToObject()')
+        end
+        return result
+      end
+
+      def visit_bodystmt(node)
+        raise CompileError.new(node, msg: 'Node size must be 5.') unless node.length == 5
+
+        return visit(node[1])
       end
 
     end
