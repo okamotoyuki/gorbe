@@ -42,7 +42,7 @@ module Gorbe
       end
 
       # Traverse Ruby AST
-      private def _visit(node, nodetype, **args)
+      private def visit_internal(node, nodetype, **args)
         method_type = @nodetype_map.key?(node[0]) ? @nodetype_map[node[0]] : 'general'
         trace(method_type)
         return args.empty? ? send("visit_#{method_type}", node) : send("visit_#{method_type}", node, **args)
@@ -60,7 +60,7 @@ module Gorbe
         end
 
         if node[0].is_a?(Symbol) || node[0].is_a?(String) # TODO : Should we really need to consider "String" type?
-          result = _visit(node, node[0])
+          result = visit_internal(node, node[0])
         elsif node[0].is_a?(Array)  # Visit multiple nodes at once
           result = []
           node.each_with_index do |single_node, i|
@@ -88,7 +88,7 @@ module Gorbe
                                'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
         end
 
-        result = _visit(node, nodetype, **args)
+        result = visit_internal(node, nodetype, **args)
         @depth -= 1
         return result
       end
