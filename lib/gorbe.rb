@@ -31,8 +31,10 @@ module Gorbe
 
     # Compile Ruby code to Go code
     def compile(input=STDIN, output=STDOUT)
+      src = input.read
+
       # Ruby code -> Ruby AST
-      ast = Ripper.sexp(input.read)
+      ast = Ripper.sexp(src)
       if Gorbe::logger.level === Logger::DEBUG
         puts('=============== Ruby AST ===============')
         PP.pp(ast, STDERR)
@@ -41,7 +43,7 @@ module Gorbe
       end
 
       # Ruby AST -> Go code
-      return generate_go_code(ast, output)
+      return generate_go_code(src, ast, output)
     end
 
     # Compile Ruby code in a file to Go code
@@ -51,8 +53,8 @@ module Gorbe
     end
 
     # Generate Go code from Ruby AST
-    def generate_go_code(ast, output)
-      toplevel = Compiler::TopLevelBlock.new
+    private def generate_go_code(src, ast, output)
+      toplevel = Compiler::TopLevelBlock.new(src)
       visitor = Compiler::StatementVisitor.new(toplevel)
 
       visitor.writer.indent_block do

@@ -1,4 +1,5 @@
 require 'set'
+require 'gorbe/compiler/source'
 
 module Gorbe
   module Compiler
@@ -91,10 +92,12 @@ module Gorbe
     # A class which stands Ruby top level block
     class TopLevelBlock < Block
       attr_reader :strings
+      attr_reader :buffer
 
-      def initialize
+      def initialize(src)
         super(nil, '<toplevel>')
         @strings = Set.new
+        @buffer = Buffer.new(src)
       end
 
       def bind_var(writer, name, value)

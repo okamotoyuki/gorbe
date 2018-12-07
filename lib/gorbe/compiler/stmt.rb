@@ -55,7 +55,23 @@ module Gorbe
         end
       end
 
+      private def is_lineno_node?(node)
+        return node.is_a?(Array) && node.length == 2 && node[0].is_a?(Integer) && node[1].is_a?(Integer)
+      end
+
       def visit_expr(node)
+        # Check lineno
+        expr_node = node
+        until is_lineno_node?(expr_node[-1])
+          expr_node = expr_node[1]
+          break if expr_node.nil? # Lineno not found
+        end
+
+        unless expr_node.nil?
+          lineno = expr_node[-1][0]
+          write_rb_context(lineno)
+        end
+
         return @expr_visitor.visit(node)
       end
 
@@ -325,6 +341,12 @@ module Gorbe
         @writer.write('continue')
       end
 
+      # A method for writing Ruby context
+      private def write_rb_context(lineno)
+        line = @block.root.buffer.get_source_line(lineno).strip
+        @writer.write("// line #{lineno}: #{line}")
+        @writer.write("πF.SetLineno(#{lineno})")
+      end
     end
   end
 end
