@@ -254,14 +254,16 @@ module Gorbe
         end
       end
 
-      private def is_constructor?(func_name)
-        return @block.is_a?(ClassBlock) && func_name === 'initialize'
+      # Check if the method needs 'self' as the first arg
+      private def is_instance_method?
+        # TODO : Need to consider class method.
+        return @block.is_a?(ClassBlock)
       end
 
       def visit_def(node)
         func_name = visit_typed_node(node[1], '@ident'.to_sym)
-        is_constructor = is_constructor?(func_name)
-        func = visit_function_inline(node, is_constructor)
+        is_constructor = is_instance_method? && func_name === 'initialize'
+        func = visit_function_inline(node, is_instance_method?)
         @block.bind_var(@writer, is_constructor ? '__init__' : func_name, func.expr)
       end
 
