@@ -1,5 +1,6 @@
 class Foo
-  def initialize()
+  def initialize(n)
+    p(n)
   end
 
   def bar(n)
@@ -7,5 +8,5 @@ class Foo
   end
 end
 
-foo = Foo.new()
-foo.bar(1)
+foo = Foo.new(1)
+foo.bar(2)
