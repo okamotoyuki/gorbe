@@ -78,12 +78,17 @@ module Gorbe
         return result
       end
 
+      # Check node type
+      def is_node?(node, nodetype)
+        return node[0] === nodetype
+      end
+
       # Visit typed node
       def visit_typed_node(node, nodetype, **args)
         @depth += 1
         result = nil # Return value
 
-        unless node[0] === nodetype
+        unless is_node?(node, nodetype)
           raise CompileError.new(node, msg: "AST node '#{node[0]}' is unexpected in this context. " +
                                'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
         end

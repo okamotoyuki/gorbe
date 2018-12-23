@@ -97,8 +97,12 @@ module Gorbe
                 '@tstring_content': 'tstring_content',
                 method_add_arg: 'method_add_arg',
                 fcall: 'fcall',
+                call: 'call',
                 arg_paren: 'arg_paren',
-                args_add_block: 'args_add_block'
+                args_add_block: 'args_add_block',
+                const_ref: 'const_ref',
+                '@const': 'const',
+                '.': 'dot'
             }
         )
       end
@@ -157,13 +161,13 @@ module Gorbe
 
         var_node = node[1]
         case var_node[0]
-        when '@kw'.to_sym, '@ident'.to_sym then
+        when '@kw'.to_sym, '@ident'.to_sym, '@const'.to_sym then
           var = visit_typed_node(var_node, var_node[0])
         else
-          raise CompileError.new(node, msg: "'#{var_node[0]}' is unexpected branch type in this context. " +
+          raise CompileError.new(node, msg: "'#{var_node[0]}' is unexpected variable type in this context. " +
               'Please contact us via https://github.com/okamotoyuki/gorbe/issues.')
         end
-        raise CompileError.new(node, msg: 'Keyword mult not be nil.') if var.nil?
+        raise CompileError.new(node, msg: 'Variable mult not be nil.') if var.nil?
 
         return @block.resolve_name(@writer, var)
       end
@@ -323,7 +327,7 @@ module Gorbe
         argv = arg_info[:argv]
         result = nil
 
-        with(argv, visit_typed_node(node[1], :fcall)) do |args, func|
+        with(argv, visit(node[1])) do |args, func|
           result = @block.alloc_temp
           @writer.write_checked_call2(result, "#{func.expr}.Call(πF, #{args.expr}, #{NIL_EXPR.expr})")
         end
@@ -342,11 +346,31 @@ module Gorbe
         return @block.resolve_name(@writer, visit_typed_node(node[1], '@ident'.to_sym))
       end
 
+      # e.g. [:call, [:var_ref, [:@const, "Foo", [7, 0]]], :".", [:@ident, "new", [7, 4]]]
+      def visit_call(node)
+        raise CompileError.new(node, msg: 'Node size must be 4.') unless node.length == 4
+
+        attr = visit_typed_node(node[3], '@ident'.to_sym)
+
+        # If the method name is 'new', invoke constructor.
+        return visit_typed_node(node[1], :var_ref) if attr === 'new'
+
+        result = nil
+        with(visit_typed_node(node[1], :var_ref)) do |obj|
+          result = @block.alloc_temp
+          operator = node[2]
+          @writer.write_checked_call2(result, "πg.GetAttr(πF, #{obj.expr}, #{@block.root.intern(attr)}, nil)")
+        end
+
+        return result
+      end
+
       # e.g. [:arg_paren, [:args_add_block, [[:@int, "1", [1, 5]]], false]]]
       def visit_arg_paren(node)
         raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
 
-        return visit_typed_node(node[1], :args_add_block)
+        return node[1].nil? ?
+                  { argc: 0, argv: NIL_EXPR } : visit_typed_node(node[1], :args_add_block)
       end
 
       # e.g. [:args_add_block, [[:@int, "1", [1, 5]]], false]]
@@ -368,6 +392,20 @@ module Gorbe
         end
 
         return { argc: argc, argv: argv }
+      end
+
+      # e.g. [:const_ref, [:@const, "Foo", [1, 6]]]
+      def visit_const_ref(node)
+        raise CompileError.new(node, msg: 'Node size must be 2.') unless node.length == 2
+
+        return visit_typed_node(node[1], '@const'.to_sym)
+      end
+
+      # e.g. [:@const, "Foo", [1, 6]]
+      def visit_const(node)
+        raise CompileError.new(node, msg: 'Node size must be 3.') unless node.length == 3
+
+        return node[1]
       end
     end
 
