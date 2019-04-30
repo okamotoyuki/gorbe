@@ -37,7 +37,7 @@ class CompilerTest < Minitest::Test
       end
 
       # Run Go code
-      actual = `go run go/main.go`
+      actual = `GO111MODULE=off go run go/main.go`
       expected = `ruby #{test_path}`
       assert_equal(expected, actual)
     end

@@ -54,5 +54,5 @@ task :run, :filepath do |task, args|
   end
 
   # Run Go code
-  sh 'go run go/main.go'
+  sh 'GO111MODULE=off go run go/main.go'
 end
